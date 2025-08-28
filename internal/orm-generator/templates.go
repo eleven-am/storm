@@ -88,6 +88,9 @@ var {{ .Model.Name }}Metadata = &storm.ModelMetadata{
 			Name:   "{{ .Name }}",
 			Type:   "{{ .Relationship.Type }}",
 			Target: "{{ .Relationship.Target }}",
+			{{- if index $.ModelTableMap .Relationship.Target }}
+			TargetTable: "{{ index $.ModelTableMap .Relationship.Target }}",
+			{{- end }}
 			{{- if .Relationship.ForeignKey }}
 			ForeignKey: "{{ .Relationship.ForeignKey }}",
 			{{- end }}

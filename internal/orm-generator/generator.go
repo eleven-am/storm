@@ -276,16 +276,24 @@ func (g *CodeGenerator) generateMetadata() error {
 			}
 		}
 
+		// Create a map of model names to table names for relationship resolution
+		modelTableMap := make(map[string]string)
+		for name, m := range g.models {
+			modelTableMap[name] = m.TableName
+		}
+
 		data := struct {
 			Package       string
 			Model         *ModelMetadata
 			HasTimeFields bool
 			Now           time.Time
+			ModelTableMap map[string]string // Pass this to the template for target table lookup
 		}{
 			Package:       g.packageName,
 			Model:         model,
 			HasTimeFields: hasTimeFields,
 			Now:           time.Now(),
+			ModelTableMap: modelTableMap,
 		}
 
 		filename := fmt.Sprintf("%s_metadata.go", strings.ToLower(model.Name))

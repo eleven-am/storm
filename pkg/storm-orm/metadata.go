@@ -54,15 +54,16 @@ type ForeignKeyMetadata struct {
 
 // RelationshipMetadata contains relationship information
 type RelationshipMetadata struct {
-	Name       string
-	Type       string // belongs_to, has_one, has_many, has_many_through
-	Target     string // Target model name
-	ForeignKey string // Foreign key field
-	TargetKey  string // Target key field (for belongs_to)
-	SourceKey  string // Source key field (for has_one/has_many)
-	Through    string // Through model (for has_many_through)
-	ThroughFK  string // Through foreign key
-	ThroughTK  string // Through target key
+	Name        string
+	Type        string // belongs_to, has_one, has_many, has_many_through
+	Target      string // Target model name
+	TargetTable string // Target table name (optional, uses Target if empty)
+	ForeignKey  string // Foreign key field
+	TargetKey   string // Target key field (for belongs_to)
+	SourceKey   string // Source key field (for has_one/has_many)
+	Through     string // Through model (for has_many_through)
+	ThroughFK   string // Through foreign key
+	ThroughTK   string // Through target key
 
 	// Generated function - zero reflection, atomic operation
 	// Scans database results directly into the model's relationship field

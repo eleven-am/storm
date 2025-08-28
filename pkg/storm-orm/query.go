@@ -597,9 +597,15 @@ func (q *Query[T]) buildBelongsToSingleQuery(relationship *RelationshipMetadata,
 		return "", nil, nil // No query needed for this record
 	}
 
+	// Use TargetTable if provided, otherwise fall back to Target
+	tableName := relationship.TargetTable
+	if tableName == "" {
+		tableName = relationship.Target
+	}
+
 	// Build query with squirrel
 	query := squirrel.Select("*").
-		From(relationship.Target).
+		From(tableName).
 		Where(squirrel.Eq{relationship.TargetKey: fkValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -637,9 +643,15 @@ func (q *Query[T]) buildHasOneSingleQuery(relationship *RelationshipMetadata, re
 		return "", nil, nil // No query needed for this record
 	}
 
+	// Use TargetTable if provided, otherwise fall back to Target
+	tableName := relationship.TargetTable
+	if tableName == "" {
+		tableName = relationship.Target
+	}
+
 	// Build query with squirrel
 	query := squirrel.Select("*").
-		From(relationship.Target).
+		From(tableName).
 		Where(squirrel.Eq{relationship.ForeignKey: sourceValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -677,9 +689,15 @@ func (q *Query[T]) buildHasManySingleQuery(relationship *RelationshipMetadata, r
 		return "", nil, nil // No query needed for this record
 	}
 
+	// Use TargetTable if provided, otherwise fall back to Target
+	tableName := relationship.TargetTable
+	if tableName == "" {
+		tableName = relationship.Target
+	}
+
 	// Build query with squirrel
 	query := squirrel.Select("*").
-		From(relationship.Target).
+		From(tableName).
 		Where(squirrel.Eq{relationship.ForeignKey: sourceValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -717,9 +735,15 @@ func (q *Query[T]) buildHasManyThroughSingleQuery(relationship *RelationshipMeta
 		return "", nil, nil // No query needed for this record
 	}
 
+	// Use TargetTable if provided, otherwise fall back to Target
+	tableName := relationship.TargetTable
+	if tableName == "" {
+		tableName = relationship.Target
+	}
+
 	// Build query with squirrel - joining through the junction table
 	query := squirrel.Select("t.*").
-		From(relationship.Target + " t").
+		From(tableName + " t").
 		InnerJoin(fmt.Sprintf("%s jt ON t.%s = jt.%s",
 			relationship.Through,
 			relationship.TargetKey,
