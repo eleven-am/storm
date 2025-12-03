@@ -217,7 +217,7 @@ func (r *Repository[T]) UpdateFields(ctx context.Context, id interface{}, update
 	var record *T
 
 	err := r.executeQueryMiddleware(OpUpdate, ctx, updates, query, func(middlewareCtx *MiddlewareContext) error {
-		// First, fetch the record that will be updated (within middleware execution)
+
 		var err error
 		record, err = r.FindByID(ctx, id)
 		if err != nil {
@@ -256,10 +256,6 @@ func (r *Repository[T]) UpdateFields(ctx context.Context, id interface{}, update
 			return ErrNotFound
 		}
 
-		// Note: We would need reflection here to apply updates to the fetched record
-		// For now, we'll fetch the updated record from the database
-
-		// Re-fetch the updated record to return it
 		record, err = r.FindByID(ctx, id)
 		if err != nil {
 			return err
@@ -291,7 +287,7 @@ func (r *Repository[T]) Delete(ctx context.Context, id interface{}) (*T, error) 
 	var record *T
 
 	err := r.executeQueryMiddleware(OpDelete, ctx, id, query, func(middlewareCtx *MiddlewareContext) error {
-		// First, fetch the record that will be deleted (within middleware execution)
+
 		var err error
 		record, err = r.FindByID(ctx, id)
 		if err != nil {
@@ -423,7 +419,7 @@ func (r *Repository[T]) CreateMany(ctx context.Context, records []T) error {
 		}
 		rollback = func() {
 			if rbErr := tx.Rollback(); rbErr != nil && rbErr.Error() != "sql: transaction has already been committed or rolled back" {
-				// Silently ignore "tx closed" errors
+
 			}
 		}
 		executor = tx
@@ -610,7 +606,7 @@ func (r *Repository[T]) UpsertMany(ctx context.Context, records []T, opts Upsert
 		}
 		rollback = func() {
 			if rbErr := tx.Rollback(); rbErr != nil && rbErr.Error() != "sql: transaction has already been committed or rolled back" {
-				// Silently ignore "tx closed" errors
+
 			}
 		}
 		executor = tx

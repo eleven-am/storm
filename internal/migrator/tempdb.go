@@ -19,7 +19,7 @@ func NewTempDBManager(baseConfig *DBConfig) *TempDBManager {
 }
 
 func (tm *TempDBManager) CreateTempDB(ctx context.Context, tempDBName string) (*sql.DB, func(), error) {
-	// Connect to the 'postgres' database instead of the target database for admin operations
+
 	adminConfig := &DBConfig{
 		URL:             tm.buildAdminDBURL(),
 		ConnMaxLifetime: tm.baseConfig.ConnMaxLifetime,

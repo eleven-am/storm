@@ -164,11 +164,11 @@ func (l *loggingExecutor) DriverName() string {
 
 // isInTransaction checks if the current executor is a transaction
 func (s *Storm) isInTransaction() bool {
-	// Check if executor is directly a transaction
+
 	if _, isTransaction := s.executor.(*sqlx.Tx); isTransaction {
 		return true
 	}
-	// Check if executor is a logging wrapper around a transaction
+
 	if loggingExec, ok := s.executor.(*loggingExecutor); ok {
 		if _, isTransaction := loggingExec.executor.(*sqlx.Tx); isTransaction {
 			return true
@@ -178,7 +178,7 @@ func (s *Storm) isInTransaction() bool {
 }
 
 func (s *Storm) WithTransaction(ctx context.Context, fn func(*Storm) error) error {
-	// Check if we're already in a transaction (either direct tx or wrapped in logging executor)
+
 	if s.isInTransaction() {
 		return fn(s)
 	}
@@ -197,7 +197,7 @@ func (s *Storm) WithTransaction(ctx context.Context, fn func(*Storm) error) erro
 	defer func() {
 		if !committed {
 			if rbErr := tx.Rollback(); rbErr != nil && rbErr.Error() != "sql: transaction has already been committed or rolled back" {
-				// Only log non-"tx closed" errors
+
 			}
 		}
 	}()
@@ -216,7 +216,7 @@ func (s *Storm) WithTransaction(ctx context.Context, fn func(*Storm) error) erro
 }
 
 func (s *Storm) WithTransactionOptions(ctx context.Context, opts *TransactionOptions, fn func(*Storm) error) error {
-	// Check if we're already in a transaction (either direct tx or wrapped in logging executor)
+
 	if s.isInTransaction() {
 		return fn(s)
 	}
@@ -236,7 +236,7 @@ func (s *Storm) WithTransactionOptions(ctx context.Context, opts *TransactionOpt
 	defer func() {
 		if !committed {
 			if rbErr := tx.Rollback(); rbErr != nil && rbErr.Error() != "sql: transaction has already been committed or rolled back" {
-				// Only log non-"tx closed" errors
+
 			}
 		}
 	}()

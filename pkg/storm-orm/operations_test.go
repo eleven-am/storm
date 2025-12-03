@@ -28,13 +28,11 @@ func TestFindByID(t *testing.T) {
 		userID := 1
 		now := time.Now()
 
-		// Set up mock expectation
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(userID, "John Doe", "john@example.com", true, now, now))
 
-		// Execute FindByID
 		user, err := repo.FindByID(context.Background(), userID)
 		require.NoError(t, err)
 		require.NotNil(t, user)
@@ -48,12 +46,10 @@ func TestFindByID(t *testing.T) {
 	t.Run("FindByID with non-existing record", func(t *testing.T) {
 		userID := 999
 
-		// Set up mock expectation
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnError(sql.ErrNoRows)
 
-		// Execute FindByID
 		user, err := repo.FindByID(context.Background(), userID)
 		assert.Error(t, err)
 		assert.Nil(t, user)
@@ -83,12 +79,10 @@ func TestDeleteRecord(t *testing.T) {
 			IsActive: true,
 		}
 
-		// Set up mock expectation
 		mock.ExpectExec(`DELETE FROM users WHERE id = \$1`).
 			WithArgs(user.ID).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Execute DeleteRecord
 		_, err := repo.DeleteRecord(context.Background(), user)
 		require.NoError(t, err)
 
@@ -103,12 +97,10 @@ func TestDeleteRecord(t *testing.T) {
 			IsActive: false,
 		}
 
-		// Set up mock expectation
 		mock.ExpectExec(`DELETE FROM users WHERE id = \$1`).
 			WithArgs(user.ID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		// Execute DeleteRecord
 		_, err := repo.DeleteRecord(context.Background(), user)
 		assert.Error(t, err)
 		assert.Equal(t, ErrNotFound, err)
@@ -135,14 +127,12 @@ func TestCreateMany(t *testing.T) {
 			{Name: "User2", Email: "user2@example.com", IsActive: false},
 		}
 
-		// Set up mock expectations
 		mock.ExpectBegin()
 		mock.ExpectExec(`INSERT INTO users`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 2))
 		mock.ExpectCommit()
 
-		// Execute CreateMany
 		err := repo.CreateMany(context.Background(), users)
 		require.NoError(t, err)
 
@@ -152,11 +142,9 @@ func TestCreateMany(t *testing.T) {
 	t.Run("CreateMany with empty slice", func(t *testing.T) {
 		users := []TestUser{}
 
-		// Execute CreateMany
 		err := repo.CreateMany(context.Background(), users)
 		require.NoError(t, err)
 
-		// No SQL should be executed
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -165,10 +153,8 @@ func TestCreateMany(t *testing.T) {
 			{Name: "User1", Email: "user1@example.com", IsActive: true},
 		}
 
-		// Set up mock expectations
 		mock.ExpectBegin().WillReturnError(assert.AnError)
 
-		// Execute CreateMany
 		err := repo.CreateMany(context.Background(), users)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to begin transaction")
@@ -201,12 +187,10 @@ func TestUpsert(t *testing.T) {
 			UpdateColumns:   []string{"name", "is_active"},
 		}
 
-		// Set up mock expectation
 		mock.ExpectExec(`INSERT INTO users .* ON CONFLICT \(email\) DO UPDATE SET`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Execute Upsert
 		err := repo.Upsert(context.Background(), user, opts)
 		require.NoError(t, err)
 
@@ -222,15 +206,12 @@ func TestUpsert(t *testing.T) {
 
 		opts := UpsertOptions{
 			ConflictColumns: []string{"email"},
-			// Empty UpdateColumns will auto-populate with all non-conflict columns
 		}
 
-		// Set up mock expectation
 		mock.ExpectExec(`INSERT INTO users .* ON CONFLICT \(email\) DO UPDATE SET`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Execute Upsert
 		err := repo.Upsert(context.Background(), user, opts)
 		require.NoError(t, err)
 
@@ -261,14 +242,12 @@ func TestUpsertMany(t *testing.T) {
 			UpdateColumns:   []string{"name", "is_active"},
 		}
 
-		// Set up mock expectations
 		mock.ExpectBegin()
 		mock.ExpectExec(`INSERT INTO users .* ON CONFLICT \(email\) DO UPDATE SET`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 2))
 		mock.ExpectCommit()
 
-		// Execute UpsertMany
 		err := repo.UpsertMany(context.Background(), users, opts)
 		require.NoError(t, err)
 
@@ -282,11 +261,9 @@ func TestUpsertMany(t *testing.T) {
 			ConflictColumns: []string{"email"},
 		}
 
-		// Execute UpsertMany
 		err := repo.UpsertMany(context.Background(), users, opts)
 		require.NoError(t, err)
 
-		// No SQL should be executed
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 }
@@ -311,25 +288,20 @@ func TestUpdateFields(t *testing.T) {
 			"is_active": false,
 		}
 
-		// Set up mock expectations
-		// First expect FindByID
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(userID, "Old Name", "old@example.com", true, now, now))
 
-		// Then expect UPDATE - args are name, is_active, then id
 		mock.ExpectExec(`UPDATE users SET`).
 			WithArgs("Updated Name", false, userID).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Then expect another FindByID to get the updated record
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(userID, "Updated Name", "old@example.com", false, now, now))
 
-		// Execute UpdateFields
 		user, err := repo.UpdateFields(context.Background(), userID, updates)
 		require.NoError(t, err)
 		require.NotNil(t, user)
@@ -346,12 +318,10 @@ func TestUpdateFields(t *testing.T) {
 			"name": "Updated Name",
 		}
 
-		// Set up mock expectation - FindByID returns no rows
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnError(sql.ErrNoRows)
 
-		// Execute UpdateFields
 		user, err := repo.UpdateFields(context.Background(), userID, updates)
 		assert.Error(t, err)
 		assert.Nil(t, user)
@@ -364,13 +334,11 @@ func TestUpdateFields(t *testing.T) {
 		userID := 1
 		updates := map[string]interface{}{}
 
-		// Execute UpdateFields - should return error immediately
 		user, err := repo.UpdateFields(context.Background(), userID, updates)
 		assert.Error(t, err)
 		assert.Nil(t, user)
 		assert.Contains(t, err.Error(), "no updates provided")
 
-		// No SQL should be executed
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -381,19 +349,15 @@ func TestUpdateFields(t *testing.T) {
 			"name": "Updated Name",
 		}
 
-		// Set up mock expectations
-		// First expect FindByID
 		mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 			WithArgs(userID).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(userID, "Old Name", "old@example.com", true, now, now))
 
-		// Then expect UPDATE that affects 0 rows
 		mock.ExpectExec(`UPDATE users SET`).
 			WithArgs("Updated Name", userID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		// Execute UpdateFields
 		user, err := repo.UpdateFields(context.Background(), userID, updates)
 		assert.Error(t, err)
 		assert.Nil(t, user)
@@ -416,12 +380,11 @@ func TestQueryUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Query Update with WHERE condition", func(t *testing.T) {
-		// Set up mock expectations
+
 		mock.ExpectExec(`UPDATE users SET`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 2))
 
-		// Execute Query Update with Actions
 		nameCol := StringColumn{Column: Column[string]{Name: "name", Table: "users"}}
 		isActiveCol := Column[bool]{Name: "is_active", Table: "users"}
 		condition := nameCol.Like("test%")
@@ -436,23 +399,21 @@ func TestQueryUpdate(t *testing.T) {
 	})
 
 	t.Run("Query Update with no actions", func(t *testing.T) {
-		// Execute Query Update with no actions - should return error
+
 		rowsAffected, err := repo.Query(context.Background()).Update()
 		assert.Error(t, err)
 		assert.Equal(t, int64(0), rowsAffected)
 		assert.Contains(t, err.Error(), "no actions provided")
 
-		// No SQL should be executed
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("Query Update without WHERE clause", func(t *testing.T) {
-		// Set up mock expectations - update all records
+
 		mock.ExpectExec(`UPDATE users SET is_active = \$1`).
 			WithArgs(false).
 			WillReturnResult(sqlmock.NewResult(0, 10))
 
-		// Execute Query Update without WHERE clause using Actions
 		isActiveCol := Column[bool]{Name: "is_active", Table: "users"}
 		rowsAffected, err := repo.Query(context.Background()).Update(
 			isActiveCol.Set(false),
@@ -464,12 +425,11 @@ func TestQueryUpdate(t *testing.T) {
 	})
 
 	t.Run("Query Update with multiple conditions", func(t *testing.T) {
-		// Set up mock expectations
+
 		mock.ExpectExec(`UPDATE users SET is_active = \$1, name = \$2 WHERE .*`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 3))
 
-		// Execute Query Update with multiple conditions using Actions
 		activeCol := Column[bool]{Name: "is_active", Table: "users"}
 		nameCol := StringColumn{Column: Column[string]{Name: "name", Table: "users"}}
 
@@ -486,12 +446,11 @@ func TestQueryUpdate(t *testing.T) {
 	})
 
 	t.Run("Query Update with no matching records", func(t *testing.T) {
-		// Set up mock expectations - no rows affected
+
 		mock.ExpectExec(`UPDATE users SET name = \$1 WHERE .*`).
 			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		// Execute Query Update using Actions
 		idCol := Column[int]{Name: "id", Table: "users"}
 		nameCol := StringColumn{Column: Column[string]{Name: "name", Table: "users"}}
 		rowsAffected, err := repo.Query(context.Background()).

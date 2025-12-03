@@ -115,12 +115,11 @@ func TestMiddlewareUpdateFields(t *testing.T) {
 	repo, err := NewRepository[TestUser](sqlxDB, metadata)
 	require.NoError(t, err)
 
-	// Add middleware that modifies the update
 	repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 		return func(ctx *MiddlewareContext) error {
 			if ctx.Operation == OpUpdate {
 				if updateBuilder, ok := ctx.QueryBuilder.(squirrel.UpdateBuilder); ok {
-					// Add additional field to update
+
 					ctx.QueryBuilder = updateBuilder.Set("updated_by", "middleware")
 				}
 			}
@@ -134,30 +133,24 @@ func TestMiddlewareUpdateFields(t *testing.T) {
 		"name": "Updated Name",
 	}
 
-	// Set up mock expectations
-	// First expect FindByID
 	mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 		WithArgs(userID).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 			AddRow(userID, "Old Name", "old@example.com", true, now, now))
 
-	// Then expect UPDATE with additional field from middleware
 	mock.ExpectExec(`UPDATE users SET`).
 		WithArgs("Updated Name", "middleware", userID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	// Then expect another FindByID
 	mock.ExpectQuery(`SELECT .* FROM users WHERE id = \$1`).
 		WithArgs(userID).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 			AddRow(userID, "Updated Name", "old@example.com", true, now, now))
 
-	// Execute UpdateFields
 	user, err := repo.UpdateFields(context.Background(), userID, updates)
 	require.NoError(t, err)
 	require.NotNil(t, user)
 
-	// Verify all expectations were met
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -173,23 +166,20 @@ func TestMiddlewareDelete(t *testing.T) {
 	repo, err := NewRepository[TestUser](sqlxDB, metadata)
 	require.NoError(t, err)
 
-	// Add middleware that prevents deletion by returning an error
 	repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 		return func(ctx *MiddlewareContext) error {
 			if ctx.Operation == OpDelete {
-				// Simulate authorization check
+
 				return fmt.Errorf("deletion not allowed")
 			}
 			return next(ctx)
 		}
 	})
 
-	// No SQL should be executed due to middleware blocking
 	_, err = repo.Delete(context.Background(), 1)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "deletion not allowed")
 
-	// Verify no SQL was executed
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -205,7 +195,6 @@ func TestMiddlewareErrorHandling(t *testing.T) {
 	repo, err := NewRepository[TestUser](sqlxDB, metadata)
 	require.NoError(t, err)
 
-	// Add middleware that returns an error
 	repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 		return func(ctx *MiddlewareContext) error {
 			if ctx.Operation == OpCreate {
@@ -215,20 +204,18 @@ func TestMiddlewareErrorHandling(t *testing.T) {
 		}
 	})
 
-	// Try to create - should fail
 	user := &TestUser{Name: "Test", Email: "test@example.com"}
 	_, err = repo.Create(context.Background(), user)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "create operation blocked by middleware")
 
-	// Verify no SQL was executed
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
 // TestMiddlewareCount tests middleware for Count operations with flexible SQL matching
 func TestMiddlewareCount(t *testing.T) {
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherFunc(func(expectedSQL, actualSQL string) error {
-		// Just verify that both conditions are present
+
 		assert.Contains(t, actualSQL, "is_active")
 		assert.Contains(t, actualSQL, "tenant_id")
 		assert.Contains(t, actualSQL, "COUNT(*)")
@@ -243,12 +230,11 @@ func TestMiddlewareCount(t *testing.T) {
 	repo, err := NewRepository[TestUser](sqlxDB, metadata)
 	require.NoError(t, err)
 
-	// Add middleware that adds filtering
 	repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 		return func(ctx *MiddlewareContext) error {
 			if ctx.Operation == OpQuery {
 				if selectBuilder, ok := ctx.QueryBuilder.(squirrel.SelectBuilder); ok {
-					// Add tenant filtering
+
 					ctx.QueryBuilder = selectBuilder.Where(squirrel.Eq{"tenant_id": 123})
 				}
 			}
@@ -256,18 +242,15 @@ func TestMiddlewareCount(t *testing.T) {
 		}
 	})
 
-	// Set up mock expectations
 	mock.ExpectQuery("SELECT COUNT").
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
 
-	// Execute count
 	activeCol := Column[bool]{Name: "is_active", Table: "users"}
 	query := repo.Query(context.Background()).Where(activeCol.Eq(true))
 	count, err := query.Count()
 	require.NoError(t, err)
 	assert.Equal(t, int64(5), count)
 
-	// Verify all expectations were met
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -283,24 +266,21 @@ func TestMiddlewareUpdateMany(t *testing.T) {
 	repo, err := NewRepository[TestUser](sqlxDB, metadata)
 	require.NoError(t, err)
 
-	// Add middleware that tracks if it was called
 	middlewareCalled := false
 	repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 		return func(ctx *MiddlewareContext) error {
 			middlewareCalled = true
 			assert.Equal(t, OpUpdateMany, ctx.Operation)
 			assert.Equal(t, "users", ctx.TableName)
-			// Note: With Action system, QueryBuilder is raw SQL string, not squirrel.UpdateBuilder
+
 			return next(ctx)
 		}
 	})
 
-	// Set up mock expectations for the actual Action-based SQL
 	mock.ExpectExec(`UPDATE users SET is_active = \$1 WHERE \(users\.name LIKE \$2\)`).
 		WithArgs(false, "test%").
 		WillReturnResult(sqlmock.NewResult(0, 3))
 
-	// Execute update with Actions
 	isActiveCol := Column[bool]{Name: "is_active", Table: "users"}
 	nameCol := StringColumn{Column: Column[string]{Name: "name", Table: "users"}}
 	condition := nameCol.Like("test%")
@@ -311,6 +291,5 @@ func TestMiddlewareUpdateMany(t *testing.T) {
 	assert.Equal(t, int64(3), rowsAffected)
 	assert.True(t, middlewareCalled, "Middleware should have been called")
 
-	// Verify all expectations were met
 	require.NoError(t, mock.ExpectationsWereMet())
 }

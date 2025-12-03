@@ -12,7 +12,7 @@ import (
 
 // TestMiddlewareIntegration tests that middleware can modify queries
 func TestMiddlewareIntegration(t *testing.T) {
-	// Test that middleware is called and can modify query builders
+
 	t.Run("Middleware modifies SELECT query", func(t *testing.T) {
 		called := false
 		var capturedBuilder interface{}
@@ -22,7 +22,6 @@ func TestMiddlewareIntegration(t *testing.T) {
 				called = true
 				capturedBuilder = ctx.QueryBuilder
 
-				// Modify the query by adding a WHERE condition
 				if sb, ok := ctx.QueryBuilder.(squirrel.SelectBuilder); ok {
 					ctx.QueryBuilder = sb.Where(squirrel.Eq{"tenant_id": 123})
 				}
@@ -31,30 +30,25 @@ func TestMiddlewareIntegration(t *testing.T) {
 			}
 		}
 
-		// Create a mock final function to verify the query was modified
 		finalFunc := func(ctx *MiddlewareContext) error {
-			// Verify the query builder was modified
+
 			sb, ok := ctx.QueryBuilder.(squirrel.SelectBuilder)
 			require.True(t, ok)
 
 			sql, args, err := sb.ToSql()
 			require.NoError(t, err)
 
-			// Check that our WHERE condition was added
 			assert.Contains(t, sql, "tenant_id")
 			assert.Contains(t, args, 123)
 
 			return nil
 		}
 
-		// Create middleware manager
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(middleware)
 
-		// Create initial query
 		query := squirrel.Select("*").From("users").Where(squirrel.Eq{"active": true})
 
-		// Execute middleware
 		ctx := &MiddlewareContext{
 			Operation:    OpQuery,
 			TableName:    "users",
@@ -66,7 +60,6 @@ func TestMiddlewareIntegration(t *testing.T) {
 		err := mm.ExecuteMiddleware(ctx, finalFunc)
 		require.NoError(t, err)
 
-		// Verify middleware was called
 		assert.True(t, called)
 		assert.NotNil(t, capturedBuilder)
 	})
@@ -81,14 +74,11 @@ func TestMiddlewareIntegration(t *testing.T) {
 			}
 		}
 
-		// Create middleware manager
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(middleware)
 
-		// Create delete query
 		query := squirrel.Delete("users").Where(squirrel.Eq{"id": 1})
 
-		// Execute middleware
 		ctx := &MiddlewareContext{
 			Operation:    OpDelete,
 			TableName:    "users",
@@ -125,12 +115,10 @@ func TestMiddlewareIntegration(t *testing.T) {
 			}
 		}
 
-		// Create middleware manager
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(middleware1)
 		mm.AddMiddleware(middleware2)
 
-		// Execute middleware
 		ctx := &MiddlewareContext{
 			Operation:    OpQuery,
 			TableName:    "users",
@@ -150,7 +138,7 @@ func TestMiddlewareIntegration(t *testing.T) {
 	t.Run("Middleware can access and modify metadata", func(t *testing.T) {
 		middleware := func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 			return func(ctx *MiddlewareContext) error {
-				// Add metadata
+
 				ctx.Metadata["user_id"] = "123"
 				ctx.Metadata["request_id"] = "abc-123"
 
@@ -158,11 +146,9 @@ func TestMiddlewareIntegration(t *testing.T) {
 			}
 		}
 
-		// Create middleware manager
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(middleware)
 
-		// Execute middleware
 		ctx := &MiddlewareContext{
 			Operation:    OpQuery,
 			TableName:    "users",
@@ -172,7 +158,7 @@ func TestMiddlewareIntegration(t *testing.T) {
 		}
 
 		err := mm.ExecuteMiddleware(ctx, func(ctx *MiddlewareContext) error {
-			// Verify metadata was set
+
 			assert.Equal(t, "123", ctx.Metadata["user_id"])
 			assert.Equal(t, "abc-123", ctx.Metadata["request_id"])
 			return nil
@@ -235,11 +221,9 @@ func TestMiddlewareIntegration(t *testing.T) {
 					}
 				}
 
-				// Create middleware manager
 				mm := newMiddlewareManager()
 				mm.AddMiddleware(middleware)
 
-				// Execute middleware
 				ctx := &MiddlewareContext{
 					Operation:    tc.operation,
 					TableName:    "users",
@@ -257,7 +241,6 @@ func TestMiddlewareIntegration(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotNil(t, modifiedBuilder)
 
-				// Verify the query was modified
 				assert.NotEqual(t, tc.builder, modifiedBuilder)
 			})
 		}
@@ -266,14 +249,14 @@ func TestMiddlewareIntegration(t *testing.T) {
 
 // TestAuthorizationMiddleware demonstrates a real-world authorization middleware
 func TestAuthorizationMiddleware(t *testing.T) {
-	// Create an authorization middleware that filters by user_id
+
 	createAuthMiddleware := func(userID int) QueryMiddleware {
 		return func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 			return func(ctx *MiddlewareContext) error {
 				switch ctx.Operation {
 				case OpQuery:
 					if sb, ok := ctx.QueryBuilder.(squirrel.SelectBuilder); ok {
-						// Add user filter to all queries
+
 						ctx.QueryBuilder = sb.Where(squirrel.Or{
 							squirrel.Eq{"user_id": userID},
 							squirrel.Eq{"is_public": true},
@@ -281,17 +264,16 @@ func TestAuthorizationMiddleware(t *testing.T) {
 					}
 				case OpUpdate, OpUpdateMany:
 					if ub, ok := ctx.QueryBuilder.(squirrel.UpdateBuilder); ok {
-						// Only allow updates to user's own records
+
 						ctx.QueryBuilder = ub.Where(squirrel.Eq{"user_id": userID})
 					}
 				case OpDelete:
 					if db, ok := ctx.QueryBuilder.(squirrel.DeleteBuilder); ok {
-						// Only allow deletes of user's own records
+
 						ctx.QueryBuilder = db.Where(squirrel.Eq{"user_id": userID})
 					}
 				case OpCreate:
-					// For creates, we could validate the record has the correct user_id
-					// This would require inspecting ctx.Record
+
 				}
 
 				return next(ctx)
@@ -303,7 +285,6 @@ func TestAuthorizationMiddleware(t *testing.T) {
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(createAuthMiddleware(123))
 
-		// Original query without user filter
 		query := squirrel.Select("*").From("posts").Where(squirrel.Eq{"status": "published"})
 
 		ctx := &MiddlewareContext{
@@ -319,7 +300,6 @@ func TestAuthorizationMiddleware(t *testing.T) {
 			sql, args, err := sb.ToSql()
 			require.NoError(t, err)
 
-			// Verify both conditions are in the query
 			assert.Contains(t, sql, "user_id")
 			assert.Contains(t, sql, "is_public")
 			assert.Contains(t, args, 123)
@@ -335,7 +315,6 @@ func TestAuthorizationMiddleware(t *testing.T) {
 		mm := newMiddlewareManager()
 		mm.AddMiddleware(createAuthMiddleware(456))
 
-		// Original update without user filter
 		query := squirrel.Update("posts").Set("title", "New Title").Where(squirrel.Eq{"id": 1})
 
 		ctx := &MiddlewareContext{
@@ -351,7 +330,6 @@ func TestAuthorizationMiddleware(t *testing.T) {
 			sql, args, err := ub.ToSql()
 			require.NoError(t, err)
 
-			// Verify user_id condition was added
 			assert.Contains(t, sql, "user_id")
 			assert.Contains(t, args, 456)
 
@@ -367,7 +345,7 @@ func TestMultiTenancyMiddleware(t *testing.T) {
 	createTenantMiddleware := func(tenantID int) QueryMiddleware {
 		return func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 			return func(ctx *MiddlewareContext) error {
-				// Add tenant_id filter to all operations
+
 				switch v := ctx.QueryBuilder.(type) {
 				case squirrel.SelectBuilder:
 					ctx.QueryBuilder = v.Where(squirrel.Eq{"tenant_id": tenantID})
@@ -376,8 +354,7 @@ func TestMultiTenancyMiddleware(t *testing.T) {
 				case squirrel.DeleteBuilder:
 					ctx.QueryBuilder = v.Where(squirrel.Eq{"tenant_id": tenantID})
 				case squirrel.InsertBuilder:
-					// For inserts, we'd need to ensure tenant_id is included
-					// This would typically be done by inspecting/modifying the record
+
 				}
 
 				return next(ctx)
@@ -388,7 +365,6 @@ func TestMultiTenancyMiddleware(t *testing.T) {
 	mm := newMiddlewareManager()
 	mm.AddMiddleware(createTenantMiddleware(999))
 
-	// Test with a query
 	query := squirrel.Select("*").From("products").Where(squirrel.Eq{"active": true})
 
 	ctx := &MiddlewareContext{
@@ -404,7 +380,6 @@ func TestMultiTenancyMiddleware(t *testing.T) {
 		sql, _, err := sb.ToSql()
 		require.NoError(t, err)
 
-		// Verify tenant_id condition was added
 		assert.Contains(t, sql, "tenant_id")
 
 		return nil

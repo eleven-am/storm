@@ -55,12 +55,10 @@ func TestRelationshipManager(t *testing.T) {
 		}
 		mgr.relationships["posts"] = expectedRel
 
-		// Test existing relationship
 		rel := mgr.getRelationship("posts")
 		assert.NotNil(t, rel)
 		assert.Equal(t, expectedRel, *rel)
 
-		// Test non-existing relationship
 		rel = mgr.getRelationship("comments")
 		assert.Nil(t, rel)
 	})
@@ -253,14 +251,12 @@ func TestRelationshipLoading_BelongsTo(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Mock the main query
 	profileRows := sqlmock.NewRows([]string{"id", "user_id", "bio"}).
 		AddRow(1, 100, "Software Engineer")
 
 	mock.ExpectQuery("SELECT (.+) FROM profiles").
 		WillReturnRows(profileRows)
 
-	// Mock the relationship query for User
 	userRows := sqlmock.NewRows([]string{"id", "name", "email", "created_at"}).
 		AddRow(100, "John Doe", "john@example.com", time.Now())
 
@@ -268,7 +264,6 @@ func TestRelationshipLoading_BelongsTo(t *testing.T) {
 		WithArgs(100).
 		WillReturnRows(userRows)
 
-	// Execute query with relationship
 	profiles, err := repo.Query(ctx).Include("User").Find()
 	require.NoError(t, err)
 	require.Len(t, profiles, 1)
@@ -278,7 +273,6 @@ func TestRelationshipLoading_BelongsTo(t *testing.T) {
 	assert.Equal(t, int64(100), profile.UserID)
 	assert.Equal(t, "Software Engineer", profile.Bio)
 
-	// Check that relationship was loaded
 	require.NotNil(t, profile.User)
 	assert.Equal(t, int64(100), profile.User.ID)
 	assert.Equal(t, "John Doe", profile.User.Name)
@@ -298,14 +292,12 @@ func TestRelationshipLoading_HasOne(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Mock the main query
 	userRows := sqlmock.NewRows([]string{"id", "name", "email", "created_at"}).
 		AddRow(100, "John Doe", "john@example.com", time.Now())
 
 	mock.ExpectQuery("SELECT (.+) FROM users").
 		WillReturnRows(userRows)
 
-	// Mock the relationship query for Profile
 	profileRows := sqlmock.NewRows([]string{"id", "user_id", "bio"}).
 		AddRow(1, 100, "Software Engineer")
 
@@ -313,7 +305,6 @@ func TestRelationshipLoading_HasOne(t *testing.T) {
 		WithArgs(100).
 		WillReturnRows(profileRows)
 
-	// Execute query with relationship
 	users, err := repo.Query(ctx).Include("Profile").Find()
 	require.NoError(t, err)
 	require.Len(t, users, 1)
@@ -323,7 +314,6 @@ func TestRelationshipLoading_HasOne(t *testing.T) {
 	assert.Equal(t, "John Doe", user.Name)
 	assert.Equal(t, "john@example.com", user.Email)
 
-	// Check that relationship was loaded
 	require.NotNil(t, user.Profile)
 	assert.Equal(t, int64(1), user.Profile.ID)
 	assert.Equal(t, int64(100), user.Profile.UserID)
@@ -343,14 +333,12 @@ func TestRelationshipLoading_HasMany(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Mock the main query
 	userRows := sqlmock.NewRows([]string{"id", "name", "email", "created_at"}).
 		AddRow(100, "John Doe", "john@example.com", time.Now())
 
 	mock.ExpectQuery("SELECT (.+) FROM users").
 		WillReturnRows(userRows)
 
-	// Mock the relationship query for Posts
 	now := time.Now()
 	postRows := sqlmock.NewRows([]string{"id", "user_id", "title", "content", "created_at"}).
 		AddRow(1, 100, "First Post", "This is my first post", now).
@@ -360,7 +348,6 @@ func TestRelationshipLoading_HasMany(t *testing.T) {
 		WithArgs(100).
 		WillReturnRows(postRows)
 
-	// Execute query with relationship
 	users, err := repo.Query(ctx).Include("Posts").Find()
 	require.NoError(t, err)
 	require.Len(t, users, 1)
@@ -370,16 +357,13 @@ func TestRelationshipLoading_HasMany(t *testing.T) {
 	assert.Equal(t, "John Doe", user.Name)
 	assert.Equal(t, "john@example.com", user.Email)
 
-	// Check that relationship was loaded
 	require.Len(t, user.Posts, 2)
 
-	// Check first post
 	assert.Equal(t, int64(1), user.Posts[0].ID)
 	assert.Equal(t, int64(100), user.Posts[0].UserID)
 	assert.Equal(t, "First Post", user.Posts[0].Title)
 	assert.Equal(t, "This is my first post", user.Posts[0].Content)
 
-	// Check second post
 	assert.Equal(t, int64(2), user.Posts[1].ID)
 	assert.Equal(t, int64(100), user.Posts[1].UserID)
 	assert.Equal(t, "Second Post", user.Posts[1].Title)
@@ -396,14 +380,12 @@ func TestScanToModel_BelongsTo(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	ctx := context.Background()
 
-	// Test profile model
 	profile := &RelTestProfile{
 		ID:     1,
 		UserID: 100,
 		Bio:    "Software Engineer",
 	}
 
-	// Mock the relationship query
 	userRows := sqlmock.NewRows([]string{"id", "name", "email", "created_at"}).
 		AddRow(100, "John Doe", "john@example.com", time.Now())
 
@@ -411,15 +393,12 @@ func TestScanToModel_BelongsTo(t *testing.T) {
 		WithArgs(100).
 		WillReturnRows(userRows)
 
-	// Get the relationship metadata
 	userRelationship := RelTestProfileMetadata.Relationships["User"]
 	require.NotNil(t, userRelationship)
 
-	// Execute ScanToModel
 	err = userRelationship.ScanToModel(ctx, sqlxDB, "SELECT id, name, email, created_at FROM RelTestUser WHERE ID = ?", []interface{}{100}, profile)
 	require.NoError(t, err)
 
-	// Verify the relationship was loaded
 	require.NotNil(t, profile.User)
 	assert.Equal(t, int64(100), profile.User.ID)
 	assert.Equal(t, "John Doe", profile.User.Name)
@@ -436,14 +415,12 @@ func TestScanToModel_HasMany(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	ctx := context.Background()
 
-	// Test user model
 	user := &RelTestUser{
 		ID:    100,
 		Name:  "John Doe",
 		Email: "john@example.com",
 	}
 
-	// Mock the relationship query
 	now := time.Now()
 	postRows := sqlmock.NewRows([]string{"id", "user_id", "title", "content", "created_at"}).
 		AddRow(1, 100, "First Post", "This is my first post", now).
@@ -453,24 +430,19 @@ func TestScanToModel_HasMany(t *testing.T) {
 		WithArgs(100).
 		WillReturnRows(postRows)
 
-	// Get the relationship metadata
 	postsRelationship := RelTestUserMetadata.Relationships["Posts"]
 	require.NotNil(t, postsRelationship)
 
-	// Execute ScanToModel
 	err = postsRelationship.ScanToModel(ctx, sqlxDB, "SELECT id, user_id, title, content, created_at FROM RelTestPost WHERE UserID = ?", []interface{}{100}, user)
 	require.NoError(t, err)
 
-	// Verify the relationship was loaded
 	require.Len(t, user.Posts, 2)
 
-	// Check first post
 	assert.Equal(t, int64(1), user.Posts[0].ID)
 	assert.Equal(t, int64(100), user.Posts[0].UserID)
 	assert.Equal(t, "First Post", user.Posts[0].Title)
 	assert.Equal(t, "This is my first post", user.Posts[0].Content)
 
-	// Check second post
 	assert.Equal(t, int64(2), user.Posts[1].ID)
 	assert.Equal(t, int64(100), user.Posts[1].UserID)
 	assert.Equal(t, "Second Post", user.Posts[1].Title)

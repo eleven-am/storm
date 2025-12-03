@@ -25,13 +25,13 @@ func TestQueryJoinRelationship(t *testing.T) {
 		query := repo.Query(context.Background())
 		result := query.JoinRelationship("posts", InnerJoin)
 		assert.NotNil(t, result)
-		assert.Equal(t, query, result) // Should return self for chaining
+		assert.Equal(t, query, result)
 	})
 
 	t.Run("RawJoin", func(t *testing.T) {
 		query := repo.Query(context.Background())
 		result := query.RawJoin("CROSS JOIN posts")
 		assert.NotNil(t, result)
-		assert.Equal(t, query, result) // Should return self for chaining
+		assert.Equal(t, query, result)
 	})
 }

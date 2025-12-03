@@ -69,7 +69,7 @@ func (tm *TransactionManager) WithTransactionOptions(ctx context.Context, opts *
 		}
 		if !committed {
 			if rbErr := tx.Rollback(); rbErr != nil && rbErr.Error() != "sql: transaction has already been committed or rolled back" {
-				// Silently ignore "tx closed" errors
+
 			}
 		}
 	}()

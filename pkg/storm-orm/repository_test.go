@@ -50,7 +50,6 @@ func TestRepositoryHelperMethods(t *testing.T) {
 
 		columns, values := repo.getInsertFields(user)
 
-		// Should exclude auto-generated fields (id, created_at, updated_at)
 		assert.Contains(t, columns, "name")
 		assert.Contains(t, columns, "email")
 		assert.Contains(t, columns, "is_active")
@@ -58,7 +57,6 @@ func TestRepositoryHelperMethods(t *testing.T) {
 		assert.NotContains(t, columns, "created_at")
 		assert.NotContains(t, columns, "updated_at")
 
-		// Check values
 		assert.Len(t, values, len(columns))
 	})
 
@@ -72,7 +70,6 @@ func TestRepositoryHelperMethods(t *testing.T) {
 
 		fields := repo.getUpdateFields(user)
 
-		// Should exclude primary keys and auto-generated fields
 		assert.Contains(t, fields, "name")
 		assert.Contains(t, fields, "email")
 		assert.Contains(t, fields, "is_active")
@@ -100,7 +97,7 @@ func TestRepositoryHelperMethods(t *testing.T) {
 	})
 
 	t.Run("AddMiddleware", func(t *testing.T) {
-		// Test adding middleware
+
 		middlewareCalled := false
 		repo.AddMiddleware(func(next QueryMiddlewareFunc) QueryMiddlewareFunc {
 			return func(ctx *MiddlewareContext) error {
@@ -108,8 +105,8 @@ func TestRepositoryHelperMethods(t *testing.T) {
 				return next(ctx)
 			}
 		})
-		// Can't directly test the middleware is set, but we can verify it doesn't panic
-		assert.False(t, middlewareCalled) // Not called until a query is executed
+
+		assert.False(t, middlewareCalled)
 	})
 }
 

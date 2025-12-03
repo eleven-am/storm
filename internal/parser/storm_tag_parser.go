@@ -84,7 +84,7 @@ func (p *StormTagParser) ParseStormTag(tag string, isRelationshipField bool) (*P
 	parsed := &ParsedStormTag{
 		Raw:            tag,
 		IsRelationship: isRelationshipField,
-		Validate:       true, // Default for relationships
+		Validate:       true,
 	}
 
 	attributes := strings.Split(tag, ";")

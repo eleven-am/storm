@@ -37,7 +37,6 @@ func TestMigrationReverser_CreateIndexWithError(t *testing.T) {
 			t.Errorf("ReverseSQL() error = %v", err)
 		}
 
-		// This should return a reversed DROP INDEX statement
 		if !strings.Contains(got, "DROP INDEX") {
 			t.Errorf("Expected DROP INDEX in result, got: %s", got)
 		}

@@ -9,14 +9,13 @@ import (
 )
 
 func TestRunORM(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_orm_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Save original values
 	origOrmPackage := ormPackage
 	origOrmOutput := ormOutput
 	origOrmIncludeHooks := ormIncludeHooks
@@ -37,7 +36,7 @@ func TestRunORM(t *testing.T) {
 	}()
 
 	t.Run("uses default package path when not specified", func(t *testing.T) {
-		// Clear package path
+
 		ormPackage = ""
 		ormOutput = ""
 		ormIncludeHooks = false
@@ -51,14 +50,14 @@ func TestRunORM(t *testing.T) {
 		if err == nil {
 			t.Error("expected error due to missing models")
 		}
-		// Should fail on Storm client creation or generation, not on package path validation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("uses configuration from storm config", func(t *testing.T) {
-		// Set up storm config
+
 		stormConfig = &StormConfig{
 			Version: "1.0",
 			Project: "test-project",
@@ -68,7 +67,6 @@ func TestRunORM(t *testing.T) {
 		stormConfig.ORM.GenerateTests = true
 		stormConfig.ORM.GenerateMocks = true
 
-		// Clear command line flags
 		ormPackage = ""
 		ormOutput = ""
 		ormIncludeHooks = false
@@ -81,14 +79,14 @@ func TestRunORM(t *testing.T) {
 		if err == nil {
 			t.Error("expected error due to missing models")
 		}
-		// Should fail on Storm client creation or generation, not on config validation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("handles non-existent package path", func(t *testing.T) {
-		// Set non-existent package path
+
 		ormPackage = "/non/existent/path"
 		ormOutput = ""
 		ormIncludeHooks = false
@@ -102,21 +100,20 @@ func TestRunORM(t *testing.T) {
 		if err == nil {
 			t.Error("expected error with non-existent package path")
 		}
-		// Should fail on Storm client creation or generation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("handles verbose output", func(t *testing.T) {
-		// Create a package directory
+
 		packageDir := filepath.Join(tempDir, "models")
 		err := os.MkdirAll(packageDir, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Set up for verbose output
 		ormPackage = packageDir
 		ormOutput = filepath.Join(tempDir, "output")
 		ormIncludeHooks = true
@@ -130,21 +127,20 @@ func TestRunORM(t *testing.T) {
 		if err == nil {
 			t.Error("expected error due to missing models")
 		}
-		// Should fail on Storm client creation or generation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("sets output directory to package path when not specified", func(t *testing.T) {
-		// Create a package directory
+
 		packageDir := filepath.Join(tempDir, "models")
 		err := os.MkdirAll(packageDir, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Set package but not output
 		ormPackage = packageDir
 		ormOutput = ""
 		ormIncludeHooks = false
@@ -158,7 +154,7 @@ func TestRunORM(t *testing.T) {
 		if err == nil {
 			t.Error("expected error due to missing models")
 		}
-		// Should fail on Storm client creation or generation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
@@ -196,7 +192,6 @@ func TestORMCommand(t *testing.T) {
 			}
 		}
 
-		// Check boolean flags defaults
 		hooksFlag := ormCmd.Flags().Lookup("hooks")
 		if hooksFlag != nil && hooksFlag.DefValue != "false" {
 			t.Errorf("expected hooks flag default to be 'false', got %s", hooksFlag.DefValue)

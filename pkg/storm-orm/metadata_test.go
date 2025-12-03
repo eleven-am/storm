@@ -18,7 +18,6 @@ func TestModelMetadata(t *testing.T) {
 		assert.Len(t, metadata.ReverseMap, 6)
 		assert.Equal(t, []string{"id"}, metadata.PrimaryKeys)
 
-		// Test column metadata
 		idCol, exists := metadata.Columns["ID"]
 		assert.True(t, exists)
 		assert.Equal(t, "ID", idCol.FieldName)
@@ -43,7 +42,6 @@ func TestModelMetadata(t *testing.T) {
 	t.Run("Column mapping", func(t *testing.T) {
 		metadata := createTestUserMetadata()
 
-		// Test forward mapping (field name -> db name)
 		assert.Equal(t, "id", metadata.ColumnMap["ID"])
 		assert.Equal(t, "name", metadata.ColumnMap["Name"])
 		assert.Equal(t, "email", metadata.ColumnMap["Email"])
@@ -51,7 +49,6 @@ func TestModelMetadata(t *testing.T) {
 		assert.Equal(t, "created_at", metadata.ColumnMap["CreatedAt"])
 		assert.Equal(t, "updated_at", metadata.ColumnMap["UpdatedAt"])
 
-		// Test reverse mapping (db name -> field name)
 		assert.Equal(t, "ID", metadata.ReverseMap["id"])
 		assert.Equal(t, "Name", metadata.ReverseMap["name"])
 		assert.Equal(t, "Email", metadata.ReverseMap["email"])
@@ -69,7 +66,6 @@ func TestModelMetadata(t *testing.T) {
 			IsActive: true,
 		}
 
-		// Test GetValue for each column
 		idCol := metadata.Columns["ID"]
 		assert.Equal(t, 42, idCol.GetValue(user))
 
@@ -93,7 +89,6 @@ func TestModelMetadata(t *testing.T) {
 			}
 		}
 
-		// Should exclude ID, CreatedAt, UpdatedAt
 		assert.Contains(t, nonAutoGenCols, "Name")
 		assert.Contains(t, nonAutoGenCols, "Email")
 		assert.Contains(t, nonAutoGenCols, "IsActive")
@@ -112,7 +107,6 @@ func TestModelMetadata(t *testing.T) {
 			}
 		}
 
-		// Should exclude ID
 		assert.Contains(t, nonPKCols, "Name")
 		assert.Contains(t, nonPKCols, "Email")
 		assert.Contains(t, nonPKCols, "IsActive")
@@ -122,7 +116,7 @@ func TestModelMetadata(t *testing.T) {
 	})
 
 	t.Run("Empty metadata validation", func(t *testing.T) {
-		// Test minimal valid metadata
+
 		metadata := &ModelMetadata{
 			TableName:   "test_table",
 			StructName:  "TestStruct",
@@ -142,7 +136,7 @@ func TestModelMetadata(t *testing.T) {
 // TestColumnMetadata tests the ColumnMetadata structure
 func TestColumnMetadata(t *testing.T) {
 	t.Run("Column flags", func(t *testing.T) {
-		// Test primary key column
+
 		pkCol := &ColumnMetadata{
 			FieldName:       "ID",
 			DBName:          "id",
@@ -161,7 +155,6 @@ func TestColumnMetadata(t *testing.T) {
 		assert.False(t, pkCol.IsUnique)
 		assert.False(t, pkCol.IsNullable)
 
-		// Test unique column
 		uniqueCol := &ColumnMetadata{
 			FieldName:       "Email",
 			DBName:          "email",
@@ -180,7 +173,6 @@ func TestColumnMetadata(t *testing.T) {
 		assert.True(t, uniqueCol.IsUnique)
 		assert.False(t, uniqueCol.IsNullable)
 
-		// Test nullable column
 		nullableCol := &ColumnMetadata{
 			FieldName:       "Description",
 			DBName:          "description",
@@ -190,7 +182,7 @@ func TestColumnMetadata(t *testing.T) {
 			IsUnique:        false,
 			IsNullable:      true,
 			GetValue: func(model interface{}) interface{} {
-				// Simulating a nullable field
+
 				return nil
 			},
 		}
@@ -207,7 +199,7 @@ func TestColumnMetadata(t *testing.T) {
 			DBName:    "test_field",
 			GoType:    "string",
 			GetValue: func(model interface{}) interface{} {
-				// Return nil for testing
+
 				return nil
 			},
 		}

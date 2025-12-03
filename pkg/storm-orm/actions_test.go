@@ -6,7 +6,7 @@ import (
 )
 
 func TestActions(t *testing.T) {
-	// Test basic column actions
+
 	nameCol := Column[string]{Name: "name", Table: "users"}
 	ageCol := NumericColumn[int]{ComparableColumn: ComparableColumn[int]{Column: Column[int]{Name: "age", Table: "users"}}}
 	updatedAtCol := TimeColumn{ComparableColumn: ComparableColumn[time.Time]{Column: Column[time.Time]{Name: "updated_at", Table: "users"}}}

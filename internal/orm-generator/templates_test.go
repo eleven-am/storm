@@ -8,20 +8,20 @@ import (
 )
 
 func TestMetadataTemplate(t *testing.T) {
-	// Test that the metadata template constant exists and is not empty
+
 	assert.NotEmpty(t, metadataTemplate)
 	assert.Contains(t, metadataTemplate, "{{ .Model.Name }}")
 	assert.Contains(t, metadataTemplate, "{{ .Package }}")
 }
 
 func TestColumnTemplate(t *testing.T) {
-	// Test that the column template constant exists and is not empty
+
 	assert.NotEmpty(t, columnTemplate)
 	assert.Contains(t, columnTemplate, "Column")
 }
 
 func TestRepositoryTemplate(t *testing.T) {
-	// Test that the repository template constant exists and is not empty
+
 	assert.NotEmpty(t, repositoryTemplate)
 	assert.Contains(t, repositoryTemplate, "Repository")
 }
@@ -62,12 +62,12 @@ func TestTemplateHelperFunctions(t *testing.T) {
 }
 
 func TestTemplateValidation(t *testing.T) {
-	// Test that template constants are properly formatted
+
 	templates := []string{metadataTemplate, columnTemplate, repositoryTemplate}
 
 	for _, template := range templates {
 		assert.NotEmpty(t, template)
-		// Basic validation that templates have proper structure
+
 		assert.Contains(t, template, "{{")
 		assert.Contains(t, template, "}}")
 	}

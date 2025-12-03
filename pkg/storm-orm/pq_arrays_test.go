@@ -162,7 +162,7 @@ func TestStringArray_RoundTrip(t *testing.T) {
 
 	for _, original := range tests {
 		t.Run("", func(t *testing.T) {
-			// Convert to driver value
+
 			value, err := original.Value()
 			require.NoError(t, err)
 
@@ -171,7 +171,6 @@ func TestStringArray_RoundTrip(t *testing.T) {
 			err = result.Scan(value)
 			require.NoError(t, err)
 
-			// Should be equal
 			assert.Equal(t, original, result)
 		})
 	}

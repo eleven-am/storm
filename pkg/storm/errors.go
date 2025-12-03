@@ -7,13 +7,13 @@ import (
 
 // Common errors
 var (
-	ErrClosed           = errors.New("storm: connection closed")
-	ErrNoConnection     = errors.New("storm: no database connection")
-	ErrInvalidConfig    = errors.New("storm: invalid configuration")
-	ErrMigrationFailed  = errors.New("storm: migration failed")
-	ErrSchemaInvalid    = errors.New("storm: invalid schema")
-	ErrNotImplemented   = errors.New("storm: not implemented")
-	ErrMigrationExists  = errors.New("storm: migration already exists")
+	ErrClosed            = errors.New("storm: connection closed")
+	ErrNoConnection      = errors.New("storm: no database connection")
+	ErrInvalidConfig     = errors.New("storm: invalid configuration")
+	ErrMigrationFailed   = errors.New("storm: migration failed")
+	ErrSchemaInvalid     = errors.New("storm: invalid schema")
+	ErrNotImplemented    = errors.New("storm: not implemented")
+	ErrMigrationExists   = errors.New("storm: migration already exists")
 	ErrMigrationNotFound = errors.New("storm: migration not found")
 	ErrDestructiveChange = errors.New("storm: destructive change detected")
 )
@@ -22,14 +22,14 @@ var (
 type ErrorType string
 
 const (
-	ErrorTypeConnection  ErrorType = "connection"
-	ErrorTypeConfig      ErrorType = "config"
-	ErrorTypeMigration   ErrorType = "migration"
-	ErrorTypeSchema      ErrorType = "schema"
-	ErrorTypeORM         ErrorType = "orm"
-	ErrorTypeGeneration  ErrorType = "generation"
-	ErrorTypeValidation  ErrorType = "validation"
-	ErrorTypeUnknown     ErrorType = "unknown"
+	ErrorTypeConnection ErrorType = "connection"
+	ErrorTypeConfig     ErrorType = "config"
+	ErrorTypeMigration  ErrorType = "migration"
+	ErrorTypeSchema     ErrorType = "schema"
+	ErrorTypeORM        ErrorType = "orm"
+	ErrorTypeGeneration ErrorType = "generation"
+	ErrorTypeValidation ErrorType = "validation"
+	ErrorTypeUnknown    ErrorType = "unknown"
 )
 
 // Error represents a Storm error with context

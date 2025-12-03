@@ -61,14 +61,13 @@ func TestDatabaseConfig(t *testing.T) {
 }
 
 func TestLoadStormConfig(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_config_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Change to temp directory
 	oldCwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -158,7 +157,6 @@ project: "test-project"
 			t.Fatalf("LoadStormConfig failed: %v", err)
 		}
 
-		// Check defaults
 		if config.Database.Driver != "postgres" {
 			t.Errorf("expected default database driver postgres, got %s", config.Database.Driver)
 		}
@@ -180,7 +178,7 @@ project: "test-project"
 	})
 
 	t.Run("load config with empty path", func(t *testing.T) {
-		// Create storm.yaml in current directory
+
 		configContent := `version: "1.0"
 project: "auto-detect"
 `
@@ -232,7 +230,7 @@ invalid: yaml: content:
 	})
 
 	t.Run("load config returns nil when no file found", func(t *testing.T) {
-		// Remove any existing config files
+
 		os.Remove("storm.yaml")
 		os.Remove("storm.yml")
 		os.Remove(".storm.yaml")
@@ -249,14 +247,13 @@ invalid: yaml: content:
 }
 
 func TestGetConfigPath(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_config_path_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Change to temp directory
 	oldCwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -278,7 +275,6 @@ func TestGetConfigPath(t *testing.T) {
 	t.Run("get config path from current directory", func(t *testing.T) {
 		os.Unsetenv("STORM_CONFIG")
 
-		// Create storm.yaml in current directory
 		configContent := `version: "1.0"`
 		err := ioutil.WriteFile("storm.yaml", []byte(configContent), 0644)
 		if err != nil {
@@ -294,7 +290,6 @@ func TestGetConfigPath(t *testing.T) {
 	t.Run("get config path returns empty when no file found", func(t *testing.T) {
 		os.Unsetenv("STORM_CONFIG")
 
-		// Remove any existing config files
 		os.Remove("storm.yaml")
 		os.Remove("storm.yml")
 		os.Remove(".storm.yaml")
@@ -308,7 +303,7 @@ func TestGetConfigPath(t *testing.T) {
 }
 
 func TestSaveStormConfig(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_save_test")
 	if err != nil {
 		t.Fatal(err)
@@ -329,12 +324,10 @@ func TestSaveStormConfig(t *testing.T) {
 			t.Fatalf("SaveStormConfig failed: %v", err)
 		}
 
-		// Verify the file was created
 		if _, err := os.Stat(configFile); os.IsNotExist(err) {
 			t.Error("config file was not created")
 		}
 
-		// Load the config back and verify
 		loadedConfig, err := LoadStormConfig(configFile)
 		if err != nil {
 			t.Fatalf("failed to load saved config: %v", err)
@@ -352,7 +345,7 @@ func TestSaveStormConfig(t *testing.T) {
 	})
 
 	t.Run("save config with default filename", func(t *testing.T) {
-		// Change to temp directory
+
 		oldCwd, err := os.Getwd()
 		if err != nil {
 			t.Fatal(err)
@@ -370,7 +363,6 @@ func TestSaveStormConfig(t *testing.T) {
 			t.Fatalf("SaveStormConfig failed: %v", err)
 		}
 
-		// Verify the file was created with default name
 		if _, err := os.Stat("storm.yaml"); os.IsNotExist(err) {
 			t.Error("default config file was not created")
 		}
@@ -388,7 +380,6 @@ func TestSaveStormConfig(t *testing.T) {
 			t.Fatalf("SaveStormConfig failed: %v", err)
 		}
 
-		// Verify the file was created
 		if _, err := os.Stat(nestedPath); os.IsNotExist(err) {
 			t.Error("nested config file was not created")
 		}
@@ -404,7 +395,6 @@ func TestSaveStormConfig(t *testing.T) {
 			Project: "permission-test",
 		}
 
-		// Create a read-only directory
 		readOnlyDir := filepath.Join(tempDir, "readonly")
 		if err := os.MkdirAll(readOnlyDir, 0755); err != nil {
 			t.Fatal(err)
@@ -412,7 +402,7 @@ func TestSaveStormConfig(t *testing.T) {
 		if err := os.Chmod(readOnlyDir, 0444); err != nil {
 			t.Fatal(err)
 		}
-		defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+		defer os.Chmod(readOnlyDir, 0755)
 
 		restrictedPath := filepath.Join(readOnlyDir, "restricted", "config.yaml")
 		err := SaveStormConfig(config, restrictedPath)

@@ -9,14 +9,13 @@ import (
 )
 
 func TestNewRootCommand(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_root_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Change to temp directory
 	oldCwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +89,7 @@ func TestNewRootCommand(t *testing.T) {
 	})
 
 	t.Run("persistent pre-run with valid config", func(t *testing.T) {
-		// Create a valid config file
+
 		configContent := `version: "1.0"
 project: "test-project"
 database:
@@ -107,18 +106,15 @@ schema:
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--config", configFile, "--verbose", "version"})
 
-		// Capture output
 		var buf bytes.Buffer
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Verify config was loaded
 		if stormConfig == nil {
 			t.Error("expected stormConfig to be loaded")
 		} else {
@@ -129,7 +125,7 @@ schema:
 	})
 
 	t.Run("persistent pre-run with invalid config", func(t *testing.T) {
-		// Create an invalid config file
+
 		configContent := `invalid: yaml: content:
   - bad
     - format
@@ -143,18 +139,15 @@ schema:
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--config", configFile, "--verbose", "version"})
 
-		// Capture output
 		var buf bytes.Buffer
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Check that warning was displayed
 		output := buf.String()
 		if !contains(output, "Warning: Failed to load config file") {
 			t.Error("expected warning about failed config loading")
@@ -165,18 +158,15 @@ schema:
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--config", "/non/existent/config.yaml", "--verbose", "version"})
 
-		// Capture output
 		var buf bytes.Buffer
 		cmd.SetOut(&buf)
 		cmd.SetErr(&buf)
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Check that warning was displayed
 		output := buf.String()
 		if !contains(output, "Warning: Failed to load config file") {
 			t.Error("expected warning about failed config loading")
@@ -184,7 +174,7 @@ schema:
 	})
 
 	t.Run("database URL override", func(t *testing.T) {
-		// Create a config with database URL
+
 		configContent := `version: "1.0"
 project: "test-project"
 database:
@@ -199,24 +189,21 @@ database:
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--config", configFile, "--url", "postgres://localhost:5432/override", "version"})
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Verify URL was overridden
 		if databaseURL != "postgres://localhost:5432/override" {
 			t.Errorf("expected database URL to be overridden, got %s", databaseURL)
 		}
 	})
 
 	t.Run("database URL from config", func(t *testing.T) {
-		// Reset global variables
+
 		databaseURL = ""
 		stormConfig = nil
 
-		// Create a config with database URL
 		configContent := `version: "1.0"
 project: "test-project"
 database:
@@ -231,33 +218,29 @@ database:
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--config", configFile, "version"})
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Verify URL was set from config
 		if databaseURL != "postgres://localhost:5432/fromconfig" {
 			t.Errorf("expected database URL from config, got %s", databaseURL)
 		}
 	})
 
 	t.Run("debug and verbose flags", func(t *testing.T) {
-		// Reset global variables
+
 		debug = false
 		verbose = false
 
 		cmd := NewRootCommand()
 		cmd.SetArgs([]string{"--debug", "--verbose", "version"})
 
-		// Execute the command
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		// Verify flags were set
 		if !debug {
 			t.Error("expected debug flag to be set")
 		}

@@ -9,14 +9,13 @@ import (
 )
 
 func TestRunGenerate(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_generate_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Save original values
 	origGeneratePackage := generatePackage
 	origGenerateOutput := generateOutput
 	origDebug := debug
@@ -27,7 +26,7 @@ func TestRunGenerate(t *testing.T) {
 	}()
 
 	t.Run("fails with non-existent package path", func(t *testing.T) {
-		// Set non-existent package path
+
 		generatePackage = "/non/existent/path"
 		generateOutput = filepath.Join(tempDir, "schema.sql")
 		debug = false
@@ -36,21 +35,20 @@ func TestRunGenerate(t *testing.T) {
 		if err == nil {
 			t.Error("expected error with non-existent package path")
 		}
-		// The error could be from Storm client creation or path resolution
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("fails with invalid output path", func(t *testing.T) {
-		// Create a valid package directory
+
 		packageDir := filepath.Join(tempDir, "models")
 		err := os.MkdirAll(packageDir, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Create a simple Go file
 		modelFile := filepath.Join(packageDir, "user.go")
 		modelContent := `package models
 
@@ -63,8 +61,7 @@ type User struct {
 			t.Fatal(err)
 		}
 
-		// Set invalid output path (directory without write permission)
-		if os.Geteuid() != 0 { // Skip permission test when running as root
+		if os.Geteuid() != 0 {
 			readOnlyDir := filepath.Join(tempDir, "readonly")
 			err = os.MkdirAll(readOnlyDir, 0755)
 			if err != nil {
@@ -74,7 +71,7 @@ type User struct {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+			defer os.Chmod(readOnlyDir, 0755)
 
 			generatePackage = packageDir
 			generateOutput = filepath.Join(readOnlyDir, "schema.sql")
@@ -84,7 +81,7 @@ type User struct {
 			if err == nil {
 				t.Error("expected error with invalid output path")
 			}
-			// The error could be from Storm client creation or file writing
+
 			if !strings.Contains(err.Error(), "failed to") {
 				t.Errorf("unexpected error message: %v", err)
 			}
@@ -94,14 +91,13 @@ type User struct {
 	})
 
 	t.Run("handles directory creation for output file", func(t *testing.T) {
-		// Create a valid package directory
+
 		packageDir := filepath.Join(tempDir, "models2")
 		err := os.MkdirAll(packageDir, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Create a simple Go file
 		modelFile := filepath.Join(packageDir, "user.go")
 		modelContent := `package models
 
@@ -114,15 +110,14 @@ type User struct {
 			t.Fatal(err)
 		}
 
-		// Set output path that requires directory creation
 		generatePackage = packageDir
 		generateOutput = filepath.Join(tempDir, "output", "schema.sql")
 		debug = false
 
 		err = runGenerate(generateCmd, []string{})
-		// This will likely fail with Storm client creation or schema export, but should handle output path
+
 		if err != nil {
-			// The error should be related to Storm client or schema generation, not path resolution
+
 			if strings.Contains(err.Error(), "failed to resolve output path") {
 				t.Errorf("should not fail on output path resolution: %v", err)
 			}
@@ -130,7 +125,7 @@ type User struct {
 	})
 
 	t.Run("handles empty package directory", func(t *testing.T) {
-		// Create an empty package directory
+
 		packageDir := filepath.Join(tempDir, "empty")
 		err := os.MkdirAll(packageDir, 0755)
 		if err != nil {
@@ -145,7 +140,7 @@ type User struct {
 		if err == nil {
 			t.Error("expected error with empty package directory")
 		}
-		// Should fail on Storm client creation or schema generation
+
 		if !strings.Contains(err.Error(), "failed to") {
 			t.Errorf("unexpected error message: %v", err)
 		}

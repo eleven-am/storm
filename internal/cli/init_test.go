@@ -9,14 +9,13 @@ import (
 )
 
 func TestRunInit(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_init_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Change to temp directory
 	oldCwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -24,7 +23,6 @@ func TestRunInit(t *testing.T) {
 	defer os.Chdir(oldCwd)
 	os.Chdir(tempDir)
 
-	// Save original values
 	origProject := initProject
 	origDriver := initDriver
 	origForce := initForce
@@ -35,7 +33,7 @@ func TestRunInit(t *testing.T) {
 	}()
 
 	t.Run("creates storm.yaml with default values", func(t *testing.T) {
-		// Reset flags
+
 		initProject = ""
 		initDriver = "postgres"
 		initForce = false
@@ -45,18 +43,15 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Check that storm.yaml was created
 		if _, err := os.Stat("storm.yaml"); os.IsNotExist(err) {
 			t.Error("storm.yaml was not created")
 		}
 
-		// Load and verify the config
 		config, err := LoadStormConfig("storm.yaml")
 		if err != nil {
 			t.Fatalf("failed to load created config: %v", err)
 		}
 
-		// Verify default values
 		if config.Version != "1" {
 			t.Errorf("expected version 1, got %s", config.Version)
 		}
@@ -94,15 +89,12 @@ func TestRunInit(t *testing.T) {
 			t.Errorf("expected naming convention snake_case, got %s", config.Schema.NamingConvention)
 		}
 
-		// The command prints success message to stdout, but we tested the main functionality
-		// which is that the config file is created correctly with proper values
 	})
 
 	t.Run("creates storm.yaml with custom project name", func(t *testing.T) {
-		// Clean up previous test
+
 		os.Remove("storm.yaml")
 
-		// Set custom project name
 		initProject = "my-awesome-project"
 		initDriver = "postgres"
 		initForce = false
@@ -112,7 +104,6 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Load and verify the config
 		config, err := LoadStormConfig("storm.yaml")
 		if err != nil {
 			t.Fatalf("failed to load created config: %v", err)
@@ -124,10 +115,9 @@ func TestRunInit(t *testing.T) {
 	})
 
 	t.Run("creates storm.yaml with custom driver", func(t *testing.T) {
-		// Clean up previous test
+
 		os.Remove("storm.yaml")
 
-		// Set custom driver
 		initProject = "test-project"
 		initDriver = "mysql"
 		initForce = false
@@ -137,7 +127,6 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Load and verify the config
 		config, err := LoadStormConfig("storm.yaml")
 		if err != nil {
 			t.Fatalf("failed to load created config: %v", err)
@@ -152,10 +141,9 @@ func TestRunInit(t *testing.T) {
 	})
 
 	t.Run("fails when storm.yaml already exists", func(t *testing.T) {
-		// Clean up previous test
+
 		os.Remove("storm.yaml")
 
-		// Create storm.yaml
 		initProject = "test-project"
 		initDriver = "postgres"
 		initForce = false
@@ -165,7 +153,6 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Try to create again without force
 		err = runInit(initCmd, []string{})
 		if err == nil {
 			t.Error("expected error when storm.yaml already exists")
@@ -176,7 +163,7 @@ func TestRunInit(t *testing.T) {
 	})
 
 	t.Run("overwrites when force flag is set", func(t *testing.T) {
-		// storm.yaml already exists from previous test
+
 		initProject = "forced-project"
 		initDriver = "postgres"
 		initForce = true
@@ -186,7 +173,6 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Load and verify the config was overwritten
 		config, err := LoadStormConfig("storm.yaml")
 		if err != nil {
 			t.Fatalf("failed to load created config: %v", err)
@@ -198,18 +184,16 @@ func TestRunInit(t *testing.T) {
 	})
 
 	t.Run("uses directory name as project when not specified", func(t *testing.T) {
-		// Create a subdirectory with specific name
+
 		projectDir := filepath.Join(tempDir, "my-project-dir")
 		err := os.MkdirAll(projectDir, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Change to that directory
 		os.Chdir(projectDir)
 		defer os.Chdir(tempDir)
 
-		// Reset project name
 		initProject = ""
 		initDriver = "postgres"
 		initForce = false
@@ -219,7 +203,6 @@ func TestRunInit(t *testing.T) {
 			t.Fatalf("runInit failed: %v", err)
 		}
 
-		// Load and verify the config
 		config, err := LoadStormConfig("storm.yaml")
 		if err != nil {
 			t.Fatalf("failed to load created config: %v", err)

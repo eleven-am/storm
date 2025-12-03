@@ -26,15 +26,15 @@ func TestQueryIncludeWhere(t *testing.T) {
 		nameCol := Column[string]{Name: "name", Table: "posts"}
 		result := query.IncludeWhere("posts", nameCol.Eq("Test Post"))
 		assert.NotNil(t, result)
-		assert.Equal(t, query, result) // Should return self for chaining
-		// Verify the include was added by checking internal state is modified
+		assert.Equal(t, query, result)
+
 	})
 
 	t.Run("IncludeWhere without condition", func(t *testing.T) {
 		query := repo.Query(context.Background())
 		result := query.IncludeWhere("posts")
 		assert.NotNil(t, result)
-		assert.Equal(t, query, result) // Should return self for chaining
-		// Verify the include was added by checking internal state is modified
+		assert.Equal(t, query, result)
+
 	})
 }

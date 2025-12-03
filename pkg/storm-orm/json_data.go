@@ -66,7 +66,6 @@ func (j *JSONData) Get(v interface{}) error {
 		return fmt.Errorf("JSONData is null or invalid")
 	}
 
-	// Marshal the data back to JSON bytes, then unmarshal into the target type
 	jsonBytes, err := json.Marshal(j.Data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSONData: %w", err)
@@ -84,7 +83,6 @@ func (j *JSONData) MustGet(v interface{}) error {
 		panic("JSONData: MustGet called on null or invalid field")
 	}
 
-	// Use the Get method internally
 	if err := j.Get(v); err != nil {
 		return err
 	}

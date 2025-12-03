@@ -201,8 +201,6 @@ func (s *Storm) Migrate(ctx context.Context, opts ...MigrateOptions) error {
 		return nil
 	}
 
-	// Migration files have been generated, but not applied
-	// User should run 'storm migrate apply' to apply them
 	return nil
 }
 

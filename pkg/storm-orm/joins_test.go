@@ -18,7 +18,7 @@ func TestJoinBuilder(t *testing.T) {
 		joinBuilder := newJoinBuilder()
 
 		result := joinBuilder.Inner("posts", "posts.user_id = users.id")
-		assert.Equal(t, joinBuilder, result) // Should return self for chaining
+		assert.Equal(t, joinBuilder, result)
 		assert.Len(t, joinBuilder.joins, 1)
 		assert.Equal(t, InnerJoin, joinBuilder.joins[0].Type)
 		assert.Equal(t, "posts", joinBuilder.joins[0].Table)

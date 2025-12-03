@@ -32,7 +32,7 @@ func TestParseORMTag(t *testing.T) {
 				Type:       "has_many",
 				Target:     "Post",
 				ForeignKey: "user_id",
-				SourceKey:  "id", // Should default to id
+				SourceKey:  "id",
 			},
 			wantErr: false,
 		},
@@ -43,7 +43,7 @@ func TestParseORMTag(t *testing.T) {
 				Type:       "has_one",
 				Target:     "Profile",
 				ForeignKey: "user_id",
-				SourceKey:  "id", // Should default to id
+				SourceKey:  "id",
 			},
 			wantErr: false,
 		},

@@ -25,7 +25,7 @@ type mockUserContext struct {
 }
 
 func createTestRepository(t testing.TB) *Repository[AuthTestUser] {
-	// Create mock metadata
+
 	metadata := &ModelMetadata{
 		TableName:   "auth_test_users",
 		PrimaryKeys: []string{"id"},
@@ -37,7 +37,6 @@ func createTestRepository(t testing.TB) *Repository[AuthTestUser] {
 		},
 	}
 
-	// Create repository with mock DB
 	mockDB := &sqlx.DB{}
 	repo, err := NewRepositoryWithExecutor[AuthTestUser](mockDB, metadata)
 	require.NoError(t, err)
@@ -47,30 +46,24 @@ func createTestRepository(t testing.TB) *Repository[AuthTestUser] {
 func TestAuthorize_SingleFunction(t *testing.T) {
 	baseRepo := createTestRepository(t)
 
-	// Test that base repository starts with no authorization functions
 	assert.Empty(t, baseRepo.authorizeFuncs)
 
-	// Add single authorization function
 	authFunc := func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
-		return query // No-op for test
+		return query
 	}
 
 	authRepo := baseRepo.Authorize(authFunc)
 
-	// Verify authorization function was added
 	assert.Len(t, authRepo.authorizeFuncs, 1)
 
-	// Verify base repository is unchanged (immutable)
 	assert.Empty(t, baseRepo.authorizeFuncs)
 
-	// Verify different instances
 	assert.NotSame(t, baseRepo, authRepo)
 }
 
 func TestAuthorize_MultipleFunction(t *testing.T) {
 	baseRepo := createTestRepository(t)
 
-	// Chain multiple authorization functions
 	authRepo := baseRepo.
 		Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
 			return query
@@ -82,41 +75,33 @@ func TestAuthorize_MultipleFunction(t *testing.T) {
 			return query
 		})
 
-	// Verify all authorization functions were added
 	assert.Len(t, authRepo.authorizeFuncs, 3)
 
-	// Verify base repository is unchanged
 	assert.Empty(t, baseRepo.authorizeFuncs)
 
-	// Verify different instances
 	assert.NotSame(t, baseRepo, authRepo)
 }
 
 func TestAuthorize_ImmutableChaining(t *testing.T) {
 	baseRepo := createTestRepository(t)
 
-	// Create first authorized repository
 	authRepo1 := baseRepo.Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
 		return query
 	})
 
-	// Create second authorized repository from first
 	authRepo2 := authRepo1.Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
 		return query
 	})
 
-	// Create third from base (different chain)
 	authRepo3 := baseRepo.Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
 		return query
 	})
 
-	// Verify each repository has the correct number of functions
 	assert.Len(t, baseRepo.authorizeFuncs, 0)
 	assert.Len(t, authRepo1.authorizeFuncs, 1)
 	assert.Len(t, authRepo2.authorizeFuncs, 2)
 	assert.Len(t, authRepo3.authorizeFuncs, 1)
 
-	// Verify all instances are different
 	assert.NotSame(t, baseRepo, authRepo1)
 	assert.NotSame(t, authRepo1, authRepo2)
 	assert.NotSame(t, authRepo1, authRepo3)
@@ -127,10 +112,8 @@ func TestQuery_NoAuthorization(t *testing.T) {
 	baseRepo := createTestRepository(t)
 	ctx := context.Background()
 
-	// Create query without authorization
 	query := baseRepo.Query(ctx)
 
-	// Verify query was created
 	assert.NotNil(t, query)
 	assert.Equal(t, baseRepo, query.repo)
 	assert.Equal(t, ctx, query.ctx)
@@ -140,7 +123,6 @@ func TestQuery_WithAuthorization(t *testing.T) {
 	baseRepo := createTestRepository(t)
 	ctx := context.Background()
 
-	// Add user context
 	userCtx := mockUserContext{
 		UserID: "user123",
 		TeamID: "team456",
@@ -148,17 +130,14 @@ func TestQuery_WithAuthorization(t *testing.T) {
 	}
 	ctx = context.WithValue(ctx, "user", userCtx)
 
-	// Track authorization function calls
 	var authCallCount int
 	var authContexts []context.Context
 
-	// Create authorized repository with tracking
 	authRepo := baseRepo.
 		Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
 			authCallCount++
 			authContexts = append(authContexts, ctx)
 
-			// Verify context has user data
 			user, ok := ctx.Value("user").(mockUserContext)
 			assert.True(t, ok)
 			assert.Equal(t, "user123", user.UserID)
@@ -172,17 +151,13 @@ func TestQuery_WithAuthorization(t *testing.T) {
 			return query
 		})
 
-	// Create query - this should call all authorization functions
 	query := authRepo.Query(ctx)
 
-	// Verify query was created
 	assert.NotNil(t, query)
 
-	// Verify authorization functions were called
 	assert.Equal(t, 2, authCallCount)
 	assert.Len(t, authContexts, 2)
 
-	// Verify contexts were passed correctly
 	for _, authCtx := range authContexts {
 		user, ok := authCtx.Value("user").(mockUserContext)
 		assert.True(t, ok)
@@ -194,7 +169,6 @@ func TestQuery_AuthorizationOrder(t *testing.T) {
 	baseRepo := createTestRepository(t)
 	ctx := context.Background()
 
-	// Track the order of authorization function calls
 	var callOrder []string
 
 	authRepo := baseRepo.
@@ -211,13 +185,10 @@ func TestQuery_AuthorizationOrder(t *testing.T) {
 			return query
 		})
 
-	// Create query
 	query := authRepo.Query(ctx)
 
-	// Verify query was created
 	assert.NotNil(t, query)
 
-	// Verify authorization functions were called in the correct order
 	assert.Equal(t, []string{"first", "second", "third"}, callOrder)
 }
 
@@ -225,7 +196,6 @@ func TestQuery_AuthorizationModifiesQuery(t *testing.T) {
 	baseRepo := createTestRepository(t)
 	ctx := context.Background()
 
-	// Add user context
 	userCtx := mockUserContext{
 		UserID: "user123",
 		TeamID: "team456",
@@ -233,16 +203,11 @@ func TestQuery_AuthorizationModifiesQuery(t *testing.T) {
 	}
 	ctx = context.WithValue(ctx, "user", userCtx)
 
-	// Track query modifications
 	var queryModified bool
 
 	authRepo := baseRepo.Authorize(func(ctx context.Context, query *Query[AuthTestUser]) *Query[AuthTestUser] {
-		// Simulate adding a WHERE clause for authorization
-		queryModified = true
 
-		// In a real scenario, this would be something like:
-		// return query.Where(Users.TeamID.Eq(user.TeamID))
-		// But for testing, we just verify the query object is passed correctly
+		queryModified = true
 
 		assert.NotNil(t, query)
 		assert.Equal(t, "auth_test_users", query.repo.metadata.TableName)
@@ -250,10 +215,8 @@ func TestQuery_AuthorizationModifiesQuery(t *testing.T) {
 		return query
 	})
 
-	// Create query
 	query := authRepo.Query(ctx)
 
-	// Verify authorization function was called and received the query
 	assert.True(t, queryModified)
 	assert.NotNil(t, query)
 }
@@ -313,10 +276,8 @@ func TestQuery_AuthorizationWithRoleBasedLogic(t *testing.T) {
 				return query
 			})
 
-			// Create query
 			query := authRepo.Query(testCtx)
 
-			// Verify query was created and correct filter was applied
 			assert.NotNil(t, query)
 			assert.Equal(t, tc.expected, appliedFilter)
 		})
@@ -326,11 +287,8 @@ func TestQuery_AuthorizationWithRoleBasedLogic(t *testing.T) {
 func TestAuthorize_NilFunction(t *testing.T) {
 	baseRepo := createTestRepository(t)
 
-	// This should not panic, but the behavior is undefined
-	// In practice, developers shouldn't pass nil functions
 	authRepo := baseRepo.Authorize(nil)
 
-	// Verify the nil function was added
 	assert.Len(t, authRepo.authorizeFuncs, 1)
 	assert.Nil(t, authRepo.authorizeFuncs[0])
 }
@@ -339,10 +297,8 @@ func TestQuery_WithNilAuthorizationFunction(t *testing.T) {
 	baseRepo := createTestRepository(t)
 	ctx := context.Background()
 
-	// Add a nil authorization function
 	authRepo := baseRepo.Authorize(nil)
 
-	// This should panic when trying to call the nil function
 	assert.Panics(t, func() {
 		authRepo.Query(ctx)
 	})

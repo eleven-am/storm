@@ -68,7 +68,6 @@ func TestJSONData_Get(t *testing.T) {
 		t.Errorf("Get() should return correct data: got %+v", result)
 	}
 
-	// Test with null data
 	nullJ := NewNullJSONData()
 	var nullResult testStruct
 	err = nullJ.Get(&nullResult)
@@ -96,7 +95,6 @@ func TestJSONData_MustGet(t *testing.T) {
 		t.Errorf("MustGet() should return correct data: got %+v", result)
 	}
 
-	// Test with null data - should panic
 	nullJ := NewNullJSONData()
 	var nullResult testStruct
 
@@ -123,7 +121,7 @@ func TestJSONData_Scan(t *testing.T) {
 		{
 			name:    "scan string",
 			value:   `{"key":"value"}`,
-			wantErr: true, // string not supported in current implementation
+			wantErr: true,
 		},
 		{
 			name:    "scan nil",
@@ -152,12 +150,12 @@ func TestJSONData_Scan(t *testing.T) {
 
 			if !tt.wantErr {
 				if tt.value == nil || (tt.value != nil && len(tt.value.([]byte)) == 0) {
-					// Should be null
+
 					if j.Valid || j.Data != nil {
 						t.Errorf("Scan(nil/empty) should set Valid=false and Data=nil")
 					}
 				} else {
-					// Should be valid
+
 					if !j.Valid || j.Data == nil {
 						t.Errorf("Scan(%v) should set Valid=true and Data!=nil", tt.value)
 					}

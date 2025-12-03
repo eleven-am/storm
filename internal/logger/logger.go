@@ -228,14 +228,13 @@ func (l *defaultLogger) EndProgress(success bool) {
 
 func (l *defaultLogger) log(level, format string, args ...interface{}) {
 	if l.inProgress {
-		fmt.Fprintf(l.output, "\r") // Clear progress line
+		fmt.Fprintf(l.output, "\r")
 		l.inProgress = false
 	}
 
 	timestamp := time.Now().Format("15:04:05")
 	message := fmt.Sprintf(format, args...)
 
-	// Build fields string
 	var fieldStr string
 	if len(l.fields) > 0 {
 		var fields []string
@@ -245,23 +244,20 @@ func (l *defaultLogger) log(level, format string, args ...interface{}) {
 		fieldStr = " " + strings.Join(fields, " ")
 	}
 
-	// Color codes for different levels
 	var levelColor string
 	switch level {
 	case "DEBUG":
-		levelColor = "\033[36m" // Cyan
+		levelColor = "\033[36m"
 	case "INFO":
-		levelColor = "\033[32m" // Green
+		levelColor = "\033[32m"
 	case "WARN":
-		levelColor = "\033[33m" // Yellow
+		levelColor = "\033[33m"
 	case "ERROR", "FATAL":
-		levelColor = "\033[31m" // Red
+		levelColor = "\033[31m"
 	}
 
-	// Reset color
 	reset := "\033[0m"
 
-	// Format: [timestamp] LEVEL message fields
 	fmt.Fprintf(l.output, "[%s] %s%s%s %s%s\n",
 		timestamp, levelColor, level, reset, message, fieldStr)
 }

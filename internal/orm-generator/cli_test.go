@@ -9,7 +9,7 @@ import (
 )
 
 func TestDiscoverModels(t *testing.T) {
-	// Create a temporary directory with test Go files
+
 	tmpDir := os.TempDir()
 	testPackageDir := filepath.Join(tmpDir, "test_package")
 	outputDir := filepath.Join(tmpDir, "orm_output")
@@ -19,11 +19,9 @@ func TestDiscoverModels(t *testing.T) {
 		os.RemoveAll(outputDir)
 	}()
 
-	// Create test directory
 	err := os.MkdirAll(testPackageDir, 0755)
 	assert.NoError(t, err)
 
-	// Create a test Go file with structs
 	testGoFile := filepath.Join(testPackageDir, "models.go")
 	testContent := `package testmodels
 
@@ -48,7 +46,6 @@ type Post struct {
 	err = os.WriteFile(testGoFile, []byte(testContent), 0644)
 	assert.NoError(t, err)
 
-	// Test the function
 	config := GenerationConfig{
 		PackageName:  "testmodels",
 		OutputDir:    outputDir,
@@ -58,17 +55,13 @@ type Post struct {
 		IncludeDocs:  false,
 	}
 
-	// Test the generator creation and model discovery
 	generator := NewCodeGenerator(config)
 	err = generator.DiscoverModels(testPackageDir)
 	if err != nil {
 		t.Logf("DiscoverModels failed: %v", err)
-		// This might fail due to parsing issues, which is expected
-		// The test verifies the function can be called without panicking
+
 	}
 
-	// The output directory may not be created if DiscoverModels doesn't find any models
-	// This is expected behavior
 }
 
 func TestDiscoverModels_InvalidPath(t *testing.T) {
@@ -79,8 +72,7 @@ func TestDiscoverModels_InvalidPath(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 	err := generator.DiscoverModels("/non/existent/path")
-	// The function might not return an error for non-existent paths
-	// This is expected behavior - it just doesn't find any models
+
 	t.Logf("DiscoverModels on non-existent path returned: %v", err)
 }
 
@@ -101,7 +93,7 @@ func TestDiscoverModels_EmptyDirectory(t *testing.T) {
 	err = generator.DiscoverModels(emptyDir)
 	if err != nil {
 		t.Logf("DiscoverModels on empty directory failed: %v", err)
-		// This might fail due to no models found, which is expected
+
 	}
 }
 
@@ -113,7 +105,6 @@ func TestParseGoFilesInDirectory(t *testing.T) {
 	err := os.MkdirAll(testDir, 0755)
 	assert.NoError(t, err)
 
-	// Create test Go files
 	testFile1 := filepath.Join(testDir, "model1.go")
 	content1 := `package testmodels
 
@@ -138,7 +129,6 @@ type TestModel2 struct {
 	err = os.WriteFile(testFile2, []byte(content2), 0644)
 	assert.NoError(t, err)
 
-	// Test parsing
 	generator := NewCodeGenerator(GenerationConfig{
 		PackageName: "testmodels",
 		OutputDir:   "/tmp/test",
@@ -147,10 +137,9 @@ type TestModel2 struct {
 	err = generator.DiscoverModels(testDir)
 	if err != nil {
 		t.Logf("DiscoverModels failed: %v", err)
-		// This might fail due to parsing issues, but we test that it doesn't panic
+
 	}
 
-	// The models should be discovered (if parsing succeeds)
 	names := generator.GetModelNames()
 	t.Logf("Discovered %d models", len(names))
 }
@@ -167,13 +156,11 @@ func TestCreateOutputDirectory(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 
-	// This should create the output directory
 	err := generator.GenerateAll()
 	if err != nil {
 		t.Logf("GenerateAll failed: %v", err)
-		// Error expected due to missing templates
+
 	}
 
-	// Verify directory was created
 	assert.DirExists(t, outputDir)
 }

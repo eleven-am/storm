@@ -41,10 +41,9 @@ func TestDBConfig_Connect(t *testing.T) {
 
 		ctx := context.Background()
 		db, err := config.Connect(ctx)
-		// Note: This may not fail immediately due to lazy connection
-		// but we can test that it doesn't panic and returns a db object
+
 		if db == nil && err != nil {
-			// This is expected for unreachable database
+
 			t.Logf("Expected behavior: cannot connect to unreachable database: %v", err)
 		}
 	})

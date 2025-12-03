@@ -21,11 +21,10 @@ func TestRepositoryGetMiddlewareManager(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("getMiddlewareManager creates new manager", func(t *testing.T) {
-		// First call creates new manager
+
 		mgr := repo.getMiddlewareManager()
 		assert.NotNil(t, mgr)
 
-		// Second call returns same manager
 		mgr2 := repo.getMiddlewareManager()
 		assert.Equal(t, mgr, mgr2)
 	})

@@ -9,22 +9,20 @@ import (
 )
 
 func TestRunCreate(t *testing.T) {
-	// Create a temporary directory for testing
+
 	tempDir, err := ioutil.TempDir("", "storm_create_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Save original outputDir
 	origOutputDir := outputDir
 	defer func() { outputDir = origOutputDir }()
 
 	t.Run("creates migration files", func(t *testing.T) {
-		// Set outputDir to temp directory
+
 		outputDir = tempDir
 
-		// Create a mock command
 		cmd := createCmd
 		args := []string{"add_users_table"}
 
@@ -33,7 +31,6 @@ func TestRunCreate(t *testing.T) {
 			t.Fatalf("runCreate failed: %v", err)
 		}
 
-		// Check that UP migration file was created
 		files, err := ioutil.ReadDir(tempDir)
 		if err != nil {
 			t.Fatal(err)
@@ -56,7 +53,6 @@ func TestRunCreate(t *testing.T) {
 			t.Error("DOWN migration file was not created")
 		}
 
-		// Check file contents
 		if upFile != "" {
 			upContent, err := ioutil.ReadFile(filepath.Join(tempDir, upFile))
 			if err != nil {
@@ -79,11 +75,10 @@ func TestRunCreate(t *testing.T) {
 	})
 
 	t.Run("creates output directory if it doesn't exist", func(t *testing.T) {
-		// Set outputDir to a non-existent directory
+
 		nestedDir := filepath.Join(tempDir, "nested", "migrations")
 		outputDir = nestedDir
 
-		// Create a mock command
 		cmd := createCmd
 		args := []string{"create_posts_table"}
 
@@ -92,12 +87,10 @@ func TestRunCreate(t *testing.T) {
 			t.Fatalf("runCreate failed: %v", err)
 		}
 
-		// Check that directory was created
 		if _, err := os.Stat(nestedDir); os.IsNotExist(err) {
 			t.Error("output directory was not created")
 		}
 
-		// Check that files were created
 		files, err := ioutil.ReadDir(nestedDir)
 		if err != nil {
 			t.Fatal(err)
@@ -113,7 +106,6 @@ func TestRunCreate(t *testing.T) {
 			t.Skip("skipping permission test when running as root")
 		}
 
-		// Set outputDir to a read-only directory
 		readOnlyDir := filepath.Join(tempDir, "readonly")
 		if err := os.MkdirAll(readOnlyDir, 0755); err != nil {
 			t.Fatal(err)
@@ -121,12 +113,11 @@ func TestRunCreate(t *testing.T) {
 		if err := os.Chmod(readOnlyDir, 0444); err != nil {
 			t.Fatal(err)
 		}
-		defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+		defer os.Chmod(readOnlyDir, 0755)
 
 		restrictedDir := filepath.Join(readOnlyDir, "restricted")
 		outputDir = restrictedDir
 
-		// Create a mock command
 		cmd := createCmd
 		args := []string{"permission_test"}
 

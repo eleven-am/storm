@@ -88,7 +88,6 @@ func TestStormTagParser_ParseStormTag(t *testing.T) {
 				return
 			}
 
-			// Check column attributes
 			if tt.expectedColumn != "" && parsed.Column != tt.expectedColumn {
 				t.Errorf("expected column %s, got %s", tt.expectedColumn, parsed.Column)
 			}
@@ -97,7 +96,6 @@ func TestStormTagParser_ParseStormTag(t *testing.T) {
 				t.Errorf("expected type %s, got %s", tt.expectedType, parsed.Type)
 			}
 
-			// Check relationship attributes
 			if tt.expectedRelType != "" && parsed.RelationType != tt.expectedRelType {
 				t.Errorf("expected relation type %s, got %s", tt.expectedRelType, parsed.RelationType)
 			}
@@ -106,7 +104,6 @@ func TestStormTagParser_ParseStormTag(t *testing.T) {
 				t.Errorf("expected relation target %s, got %s", tt.expectedTarget, parsed.RelationTarget)
 			}
 
-			// Check context
 			if parsed.IsRelationship != tt.isRelationship {
 				t.Errorf("expected isRelationship %v, got %v", tt.isRelationship, parsed.IsRelationship)
 			}
@@ -212,7 +209,7 @@ func TestStormTagParser_ValidateForeignKey(t *testing.T) {
 		{
 			name:        "belongs_to without foreign_key",
 			tag:         "relation:belongs_to:User",
-			expectError: false, // Should auto-generate foreign_key
+			expectError: false,
 		},
 		{
 			name:        "has_many with foreign_key",
@@ -346,7 +343,6 @@ func TestStormTagParser_ToSnakeCase(t *testing.T) {
 func TestStormTagParser_ToTableLevelAttributes(t *testing.T) {
 	parser := NewStormTagParser()
 
-	// Test with a tag that has table-level attributes
 	parsed, err := parser.ParseStormTag("column:id;type:uuid;primary_key;index:idx_user_id", false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -354,7 +350,6 @@ func TestStormTagParser_ToTableLevelAttributes(t *testing.T) {
 
 	attrs := parsed.ToTableLevelAttributes()
 
-	// Table-level attributes should include the index attribute
 	if len(attrs) != 1 {
 		t.Errorf("expected 1 table-level attribute, got %d", len(attrs))
 	}

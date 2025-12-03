@@ -67,7 +67,7 @@ func (g *StructGenerator) GenerateStructs() (string, error) {
 	}
 
 	for _, table := range sortedTables(g.schema.Tables) {
-		// Skip tables without primary keys
+
 		if table.PrimaryKey == nil || len(table.PrimaryKey.Columns) == 0 {
 			fmt.Printf("Skipping table %s: no primary key defined\n", table.Name)
 			continue
@@ -387,7 +387,6 @@ func postgresTypeToGoType(dataType, udtName string, isNullable bool) (string, er
 			baseType = baseType[1:]
 		}
 
-		// Use storm.StringArray for string-based PostgreSQL arrays
 		switch baseType {
 		case "text", "character varying", "character", "varchar":
 			goType = "storm.StringArray"
@@ -528,7 +527,7 @@ func (g *StructGenerator) collectImports() []string {
 			if col.DataType == "json" || col.DataType == "jsonb" {
 				imports["github.com/eleven-am/storm/pkg/storm-orm"] = true
 			}
-			// Check for PostgreSQL array types that use storm.StringArray
+
 			if strings.HasPrefix(col.DataType, "ARRAY") || strings.HasSuffix(col.DataType, "[]") {
 				baseType := col.UDTName
 				if strings.HasPrefix(baseType, "_") {

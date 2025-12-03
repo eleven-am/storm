@@ -50,7 +50,6 @@ func TestCodeGenerator_GenerateCode(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 
-	// Add a test model
 	testModel := &ModelMetadata{
 		Name:    "TestUser",
 		Package: "testmodels",
@@ -76,11 +75,9 @@ func TestCodeGenerator_GenerateCode(t *testing.T) {
 	err := generator.GenerateAll()
 	if err != nil {
 		t.Logf("GenerateAll failed: %v", err)
-		// This might fail due to missing templates, which is expected
-		// The test verifies the function can be called without panicking
+
 	}
 
-	// Verify the output directory was created
 	assert.DirExists(t, outputDir)
 }
 
@@ -107,12 +104,10 @@ func TestCodeGenerator_GetModel(t *testing.T) {
 
 	generator.models["TestModel"] = model
 
-	// Test getting existing model
 	retrievedModel, exists := generator.GetModel("TestModel")
 	assert.True(t, exists)
 	assert.Equal(t, model, retrievedModel)
 
-	// Test getting non-existent model
 	_, exists = generator.GetModel("NonExistent")
 	assert.False(t, exists)
 }
@@ -125,7 +120,6 @@ func TestCodeGenerator_GetModelNames(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 
-	// Add some test models
 	model1 := &ModelMetadata{Name: "Model1", Package: "test"}
 	model2 := &ModelMetadata{Name: "Model2", Package: "test"}
 
@@ -146,7 +140,6 @@ func TestValidateModels(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 
-	// Add a valid model
 	model := &ModelMetadata{
 		Name:    "TestModel",
 		Package: "test",
@@ -170,7 +163,7 @@ func TestValidateModels(t *testing.T) {
 	err := generator.ValidateModels()
 	if err != nil {
 		t.Logf("ValidateModels failed: %v", err)
-		// Validation might fail due to missing dependencies, which is expected
+
 	}
 }
 
@@ -186,7 +179,6 @@ func TestGenerateForModel(t *testing.T) {
 
 	generator := NewCodeGenerator(config)
 
-	// Add a test model
 	model := &ModelMetadata{
 		Name:    "TestModel",
 		Package: "test",
@@ -205,10 +197,8 @@ func TestGenerateForModel(t *testing.T) {
 	err := generator.GenerateForModel("TestModel")
 	if err != nil {
 		t.Logf("GenerateForModel failed: %v", err)
-		// This might fail due to missing templates, which is expected
+
 	}
 
-	// The output directory may not be created if generation fails
-	// This is expected behavior when templates are missing
 	t.Logf("GenerateForModel completed, output directory exists: %v", fileExists(outputDir))
 }

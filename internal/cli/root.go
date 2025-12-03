@@ -29,7 +29,7 @@ Storm provides powerful tools for:
 - Modern CLI with rich output capabilities`,
 		Version: storm.Version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			// Configure logging
+
 			if verbose {
 				logger.SetLevel(logger.DebugLevel)
 			} else if debug {
@@ -37,7 +37,7 @@ Storm provides powerful tools for:
 			} else {
 				logger.SetLevel(logger.WarnLevel)
 			}
-			
+
 			var err error
 			stormConfig, err = LoadStormConfig(configFile)
 			if err != nil {

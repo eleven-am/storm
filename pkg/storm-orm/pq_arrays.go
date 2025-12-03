@@ -36,10 +36,9 @@ func (sa StringArray) Value() (driver.Value, error) {
 		return "{}", nil
 	}
 
-	// Escape quotes and build PostgreSQL array literal
 	var escaped []string
 	for _, s := range sa {
-		// Escape quotes by doubling them
+
 		escaped = append(escaped, `"`+strings.ReplaceAll(s, `"`, `""`)+`"`)
 	}
 
@@ -53,7 +52,6 @@ func (sa *StringArray) parseArray(s string) error {
 		return nil
 	}
 
-	// Remove outer braces
 	if !strings.HasPrefix(s, "{") || !strings.HasSuffix(s, "}") {
 		return fmt.Errorf("invalid array format: %s", s)
 	}
@@ -64,7 +62,6 @@ func (sa *StringArray) parseArray(s string) error {
 		return nil
 	}
 
-	// Parse array elements
 	var result []string
 	var current strings.Builder
 	var inQuotes bool
@@ -76,10 +73,10 @@ func (sa *StringArray) parseArray(s string) error {
 		switch char {
 		case '"':
 			if inQuotes {
-				// Check if this is an escaped quote
+
 				if i+1 < len(content) && content[i+1] == '"' {
 					current.WriteByte('"')
-					i += 2 // Skip both quotes
+					i += 2
 					continue
 				}
 				inQuotes = false
@@ -100,7 +97,6 @@ func (sa *StringArray) parseArray(s string) error {
 		i++
 	}
 
-	// Add the last element
 	if current.Len() > 0 || len(result) > 0 {
 		result = append(result, current.String())
 	}

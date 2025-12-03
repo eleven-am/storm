@@ -141,7 +141,7 @@ func (r *Repository[T]) getInsertFields(model T) (columns []string, values []int
 
 		if colMeta.IsPointer && colMeta.IsNil != nil {
 			if colMeta.IsNil(model) {
-				continue // Skip nil pointers (let DB use default)
+				continue
 			}
 		}
 

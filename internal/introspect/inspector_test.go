@@ -88,83 +88,83 @@ func TestInspector_PostgresDriver(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetSchema", func(t *testing.T) {
-		// Mock the schema query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"schema_name"}).AddRow("public"))
 
 		_, err := inspector.GetSchema(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetTable", func(t *testing.T) {
-		// Mock the table query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"table_name"}).AddRow("users"))
 
 		_, err := inspector.GetTable(ctx, "public", "users")
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetTables", func(t *testing.T) {
-		// Mock the tables query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"table_name"}).AddRow("users"))
 
 		_, err := inspector.GetTables(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetDatabaseMetadata", func(t *testing.T) {
-		// Mock the database metadata query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"version"}).AddRow("14.0"))
 
 		_, err := inspector.GetDatabaseMetadata(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetEnums", func(t *testing.T) {
-		// Mock the enums query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"enum_name"}).AddRow("status"))
 
 		_, err := inspector.GetEnums(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetFunctions", func(t *testing.T) {
-		// Mock the functions query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"function_name"}).AddRow("test_func"))
 
 		_, err := inspector.GetFunctions(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetSequences", func(t *testing.T) {
-		// Mock the sequences query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"sequence_name"}).AddRow("users_id_seq"))
 
 		_, err := inspector.GetSequences(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetViews", func(t *testing.T) {
-		// Mock the views query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"view_name"}).AddRow("user_view"))
 
 		_, err := inspector.GetViews(ctx)
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 
 	t.Run("GetTableStatistics", func(t *testing.T) {
-		// Mock the table statistics query
+
 		mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"reltuples"}).AddRow(100))
 
 		_, err := inspector.GetTableStatistics(ctx, "public", "users")
-		// It's expected to fail with specific postgres queries, but we're testing the path
+
 		_ = err
 	})
 }

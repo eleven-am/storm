@@ -391,7 +391,6 @@ func (q *Query[T]) Update(actions ...Action) (int64, error) {
 		}
 	}
 
-	// Build the update query with custom expressions
 	var setParts []string
 	var args []interface{}
 	argIndex := 1
@@ -401,7 +400,7 @@ func (q *Query[T]) Update(actions ...Action) (int64, error) {
 		value := action.Value()
 
 		if value != nil {
-			// Handle special case where value is a slice (for JSONB operations)
+
 			if valueSlice, ok := value.([]interface{}); ok {
 				for _, v := range valueSlice {
 					expression = strings.Replace(expression, "?", fmt.Sprintf("$%d", argIndex), 1)
@@ -409,7 +408,7 @@ func (q *Query[T]) Update(actions ...Action) (int64, error) {
 					argIndex++
 				}
 			} else {
-				// Replace ? with actual placeholder numbers
+
 				for strings.Contains(expression, "?") {
 					expression = strings.Replace(expression, "?", fmt.Sprintf("$%d", argIndex), 1)
 					args = append(args, value)
@@ -420,10 +419,8 @@ func (q *Query[T]) Update(actions ...Action) (int64, error) {
 		setParts = append(setParts, expression)
 	}
 
-	// Build raw SQL since squirrel doesn't handle custom expressions well
 	baseSQL := fmt.Sprintf("UPDATE %s SET %s", q.repo.metadata.TableName, strings.Join(setParts, ", "))
 
-	// Add WHERE clause if present
 	if len(q.whereClause) > 0 {
 		whereBuilder := squirrel.Select("1").Where(q.whereClause).PlaceholderFormat(squirrel.Dollar)
 		_, whereArgs, err := whereBuilder.ToSql()
@@ -435,12 +432,11 @@ func (q *Query[T]) Update(actions ...Action) (int64, error) {
 			}
 		}
 
-		// Extract just the WHERE part from the dummy SELECT
 		dummySQL, _, _ := whereBuilder.ToSql()
 		whereStart := strings.Index(dummySQL, "WHERE")
 		if whereStart != -1 {
 			whereClause := dummySQL[whereStart:]
-			// Update placeholder numbers to continue from our current argIndex
+
 			for i := range whereArgs {
 				placeholder := fmt.Sprintf("$%d", i+1)
 				newPlaceholder := fmt.Sprintf("$%d", argIndex+i)
@@ -520,15 +516,14 @@ func (q *Query[T]) loadRelationship(records []T, include include) error {
 		return fmt.Errorf("relationship %s does not have ScanToModel function", include.name)
 	}
 
-	// One atomic operation per record
 	for i := range records {
-		// Build query for this specific record
+
 		recordQuery, recordArgs, err := q.buildSingleRecordQuery(relationship, records[i], include)
 		if err != nil {
 			return err
 		}
 
-		if recordQuery != "" { // Only scan if there's a query to execute
+		if recordQuery != "" {
 			if err := q.executeSingleRelationshipQuery(relationship, recordQuery, recordArgs, &records[i]); err != nil {
 				return err
 			}
@@ -539,9 +534,9 @@ func (q *Query[T]) loadRelationship(records []T, include include) error {
 }
 
 func (q *Query[T]) executeSingleRelationshipQuery(relationship *RelationshipMetadata, query string, args []interface{}, record *T) error {
-	// Use middleware system with proper transaction support
+
 	return q.repo.executeQueryMiddleware(OpQuery, q.ctx, record, query, func(middlewareCtx *MiddlewareContext) error {
-		// Get the appropriate database executor (transaction-aware)
+
 		var executor DBExecutor
 		if q.tx != nil {
 			executor = q.tx
@@ -549,7 +544,6 @@ func (q *Query[T]) executeSingleRelationshipQuery(relationship *RelationshipMeta
 			executor = q.repo.db
 		}
 
-		// Execute the ScanToModel function with proper context
 		if err := relationship.ScanToModel(q.ctx, executor, query, args, record); err != nil {
 			return &Error{
 				Op:    "load_relationship",
@@ -578,7 +572,7 @@ func (q *Query[T]) buildSingleRecordQuery(relationship *RelationshipMetadata, re
 }
 
 func (q *Query[T]) buildBelongsToSingleQuery(relationship *RelationshipMetadata, record T, include include) (string, []interface{}, error) {
-	// Get the column metadata for the foreign key field
+
 	fkFieldName, ok := q.repo.metadata.ReverseMap[relationship.ForeignKey]
 	if !ok {
 		fkFieldName = relationship.ForeignKey
@@ -594,22 +588,19 @@ func (q *Query[T]) buildBelongsToSingleQuery(relationship *RelationshipMetadata,
 
 	fkValue := fkColumn.GetValue(record)
 	if fkValue == nil || isZeroValue(fkValue) {
-		return "", nil, nil // No query needed for this record
+		return "", nil, nil
 	}
 
-	// Use TargetTable if provided, otherwise fall back to Target
 	tableName := relationship.TargetTable
 	if tableName == "" {
 		tableName = relationship.Target
 	}
 
-	// Build query with squirrel
 	query := squirrel.Select("*").
 		From(tableName).
 		Where(squirrel.Eq{relationship.TargetKey: fkValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
-	// Apply conditions from IncludeWhere
 	for _, condition := range include.conditions {
 		query = query.Where(condition.ToSqlizer())
 	}
@@ -618,13 +609,12 @@ func (q *Query[T]) buildBelongsToSingleQuery(relationship *RelationshipMetadata,
 }
 
 func (q *Query[T]) buildHasOneSingleQuery(relationship *RelationshipMetadata, record T, include include) (string, []interface{}, error) {
-	// Default source key to primary key if not specified
+
 	sourceKey := relationship.SourceKey
 	if sourceKey == "" {
 		sourceKey = "id"
 	}
 
-	// Get the column metadata for the source key field
 	sourceFieldName, ok := q.repo.metadata.ReverseMap[sourceKey]
 	if !ok {
 		sourceFieldName = sourceKey
@@ -640,22 +630,19 @@ func (q *Query[T]) buildHasOneSingleQuery(relationship *RelationshipMetadata, re
 
 	sourceValue := sourceColumn.GetValue(record)
 	if sourceValue == nil || isZeroValue(sourceValue) {
-		return "", nil, nil // No query needed for this record
+		return "", nil, nil
 	}
 
-	// Use TargetTable if provided, otherwise fall back to Target
 	tableName := relationship.TargetTable
 	if tableName == "" {
 		tableName = relationship.Target
 	}
 
-	// Build query with squirrel
 	query := squirrel.Select("*").
 		From(tableName).
 		Where(squirrel.Eq{relationship.ForeignKey: sourceValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
-	// Apply conditions from IncludeWhere
 	for _, condition := range include.conditions {
 		query = query.Where(condition.ToSqlizer())
 	}
@@ -664,13 +651,12 @@ func (q *Query[T]) buildHasOneSingleQuery(relationship *RelationshipMetadata, re
 }
 
 func (q *Query[T]) buildHasManySingleQuery(relationship *RelationshipMetadata, record T, include include) (string, []interface{}, error) {
-	// Default source key to primary key if not specified
+
 	sourceKey := relationship.SourceKey
 	if sourceKey == "" {
 		sourceKey = "id"
 	}
 
-	// Get the column metadata for the source key field
 	sourceFieldName, ok := q.repo.metadata.ReverseMap[sourceKey]
 	if !ok {
 		sourceFieldName = sourceKey
@@ -686,22 +672,19 @@ func (q *Query[T]) buildHasManySingleQuery(relationship *RelationshipMetadata, r
 
 	sourceValue := sourceColumn.GetValue(record)
 	if sourceValue == nil || isZeroValue(sourceValue) {
-		return "", nil, nil // No query needed for this record
+		return "", nil, nil
 	}
 
-	// Use TargetTable if provided, otherwise fall back to Target
 	tableName := relationship.TargetTable
 	if tableName == "" {
 		tableName = relationship.Target
 	}
 
-	// Build query with squirrel
 	query := squirrel.Select("*").
 		From(tableName).
 		Where(squirrel.Eq{relationship.ForeignKey: sourceValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
-	// Apply conditions from IncludeWhere
 	for _, condition := range include.conditions {
 		query = query.Where(condition.ToSqlizer())
 	}
@@ -710,13 +693,12 @@ func (q *Query[T]) buildHasManySingleQuery(relationship *RelationshipMetadata, r
 }
 
 func (q *Query[T]) buildHasManyThroughSingleQuery(relationship *RelationshipMetadata, record T, include include) (string, []interface{}, error) {
-	// Default source key to primary key if not specified
+
 	sourceKey := relationship.SourceKey
 	if sourceKey == "" {
 		sourceKey = "id"
 	}
 
-	// Get the column metadata for the source key field
 	sourceFieldName, ok := q.repo.metadata.ReverseMap[sourceKey]
 	if !ok {
 		sourceFieldName = sourceKey
@@ -732,16 +714,14 @@ func (q *Query[T]) buildHasManyThroughSingleQuery(relationship *RelationshipMeta
 
 	sourceValue := sourceColumn.GetValue(record)
 	if sourceValue == nil || isZeroValue(sourceValue) {
-		return "", nil, nil // No query needed for this record
+		return "", nil, nil
 	}
 
-	// Use TargetTable if provided, otherwise fall back to Target
 	tableName := relationship.TargetTable
 	if tableName == "" {
 		tableName = relationship.Target
 	}
 
-	// Build query with squirrel - joining through the junction table
 	query := squirrel.Select("t.*").
 		From(tableName + " t").
 		InnerJoin(fmt.Sprintf("%s jt ON t.%s = jt.%s",
@@ -751,7 +731,6 @@ func (q *Query[T]) buildHasManyThroughSingleQuery(relationship *RelationshipMeta
 		Where(squirrel.Eq{"jt." + relationship.ThroughFK: sourceValue}).
 		PlaceholderFormat(squirrel.Dollar)
 
-	// Apply conditions from IncludeWhere
 	for _, condition := range include.conditions {
 		query = query.Where(condition.ToSqlizer())
 	}
@@ -780,8 +759,7 @@ func isZeroValue(v interface{}) bool {
 	case bool:
 		return !val
 	default:
-		// For other types, we can't easily determine zero value without reflection
-		// This should cover most common database field types
+
 		return false
 	}
 }

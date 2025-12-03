@@ -27,16 +27,13 @@ func TestQueryContext(t *testing.T) {
 	t.Run("QueryContext with custom context", func(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "test-key", "test-value")
 
-		// Set up mock expectation
 		mock.ExpectQuery(`SELECT .* FROM users`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute Query with context
 		query := repo.Query(ctx)
 		assert.NotNil(t, query)
 		assert.Equal(t, ctx, query.ctx)
 
-		// Execute the query
 		_, err := query.Find()
 		require.NoError(t, err)
 
@@ -90,11 +87,10 @@ func TestQueryOrderBy(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("OrderBy single column", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users ORDER BY users.name ASC`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with OrderBy
 		nameCol := Column[string]{Name: "name", Table: "users"}
 		_, err := repo.Query(context.Background()).OrderBy(nameCol.Asc()).Find()
 		require.NoError(t, err)
@@ -103,11 +99,10 @@ func TestQueryOrderBy(t *testing.T) {
 	})
 
 	t.Run("OrderBy multiple columns", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users ORDER BY users.is_active DESC, users.name ASC`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with multiple OrderBy
 		activeCol := Column[bool]{Name: "is_active", Table: "users"}
 		nameCol := Column[string]{Name: "name", Table: "users"}
 		_, err := repo.Query(context.Background()).OrderBy(activeCol.Desc(), nameCol.Asc()).Find()
@@ -130,11 +125,10 @@ func TestQueryLimitOffset(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Query with Limit", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users LIMIT 10`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with Limit
 		_, err := repo.Query(context.Background()).Limit(10).Find()
 		require.NoError(t, err)
 
@@ -142,11 +136,10 @@ func TestQueryLimitOffset(t *testing.T) {
 	})
 
 	t.Run("Query with Limit and Offset", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users LIMIT 10 OFFSET 20`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with Limit and Offset
 		_, err := repo.Query(context.Background()).Limit(10).Offset(20).Find()
 		require.NoError(t, err)
 
@@ -169,12 +162,10 @@ func TestQueryFirst(t *testing.T) {
 	t.Run("First with result", func(t *testing.T) {
 		now := time.Now()
 
-		// Set up mock expectation
 		mock.ExpectQuery(`SELECT .* FROM users LIMIT 1`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(1, "John Doe", "john@example.com", true, now, now))
 
-		// Execute First
 		user, err := repo.Query(context.Background()).First()
 		require.NoError(t, err)
 		require.NotNil(t, user)
@@ -184,11 +175,10 @@ func TestQueryFirst(t *testing.T) {
 	})
 
 	t.Run("First with no result", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users LIMIT 1`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute First
 		user, err := repo.Query(context.Background()).First()
 		assert.Error(t, err)
 		assert.Nil(t, user)
@@ -211,11 +201,10 @@ func TestQueryExists(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Exists returns true", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT COUNT\(\*\) FROM users`).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
 
-		// Execute Exists
 		exists, err := repo.Query(context.Background()).Exists()
 		require.NoError(t, err)
 		assert.True(t, exists)
@@ -224,11 +213,10 @@ func TestQueryExists(t *testing.T) {
 	})
 
 	t.Run("Exists returns false", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT COUNT\(\*\) FROM users`).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
-		// Execute Exists
 		exists, err := repo.Query(context.Background()).Exists()
 		require.NoError(t, err)
 		assert.False(t, exists)
@@ -250,12 +238,11 @@ func TestQueryDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Delete with conditions", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectExec(`DELETE FROM users WHERE`).
 			WithArgs(false).
 			WillReturnResult(sqlmock.NewResult(0, 5))
 
-		// Execute Delete
 		activeCol := Column[bool]{Name: "is_active", Table: "users"}
 		rowsAffected, err := repo.Query(context.Background()).Where(activeCol.Eq(false)).Delete()
 		require.NoError(t, err)
@@ -265,12 +252,11 @@ func TestQueryDelete(t *testing.T) {
 	})
 
 	t.Run("Delete with no matches", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectExec(`DELETE FROM users WHERE`).
 			WithArgs("nonexistent@example.com").
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		// Execute Delete
 		emailCol := Column[string]{Name: "email", Table: "users"}
 		rowsAffected, err := repo.Query(context.Background()).Where(emailCol.Eq("nonexistent@example.com")).Delete()
 		require.NoError(t, err)
@@ -293,11 +279,10 @@ func TestQueryJoins(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("InnerJoin", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users INNER JOIN posts ON posts.user_id = users.id`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with InnerJoin
 		_, err := repo.Query(context.Background()).InnerJoin("posts", "posts.user_id = users.id").Find()
 		require.NoError(t, err)
 
@@ -305,11 +290,10 @@ func TestQueryJoins(t *testing.T) {
 	})
 
 	t.Run("LeftJoin", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users LEFT JOIN posts ON posts.user_id = users.id`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with LeftJoin
 		_, err := repo.Query(context.Background()).LeftJoin("posts", "posts.user_id = users.id").Find()
 		require.NoError(t, err)
 
@@ -317,11 +301,10 @@ func TestQueryJoins(t *testing.T) {
 	})
 
 	t.Run("RightJoin", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users RIGHT JOIN posts ON posts.user_id = users.id`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with RightJoin
 		_, err := repo.Query(context.Background()).RightJoin("posts", "posts.user_id = users.id").Find()
 		require.NoError(t, err)
 
@@ -329,11 +312,10 @@ func TestQueryJoins(t *testing.T) {
 	})
 
 	t.Run("FullJoin", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT .* FROM users JOIN FULL OUTER JOIN posts ON posts.user_id = users.id`).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}))
 
-		// Execute query with FullJoin
 		_, err := repo.Query(context.Background()).FullJoin("posts", "posts.user_id = users.id").Find()
 		require.NoError(t, err)
 
@@ -354,15 +336,14 @@ func TestQueryInclude(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Include single relationship", func(t *testing.T) {
-		// Test that Include method adds relationships to the query
-		// Note: Actual relationship loading would require relationship definitions
+
 		query := repo.Query(context.Background()).Include("posts")
 		assert.Len(t, query.includes, 1)
 		assert.Equal(t, "posts", query.includes[0].name)
 	})
 
 	t.Run("Include multiple relationships", func(t *testing.T) {
-		// Execute query with multiple includes
+
 		query := repo.Query(context.Background()).Include("posts", "comments", "tags")
 		assert.Len(t, query.includes, 3)
 		assert.Equal(t, "posts", query.includes[0].name)
@@ -386,13 +367,11 @@ func TestQueryExecuteRaw(t *testing.T) {
 	t.Run("ExecuteRaw with custom SQL", func(t *testing.T) {
 		now := time.Now()
 
-		// Set up mock expectation
 		mock.ExpectQuery(`SELECT \* FROM users WHERE created_at > \$1`).
 			WithArgs(sqlmock.AnyArg()).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "is_active", "created_at", "updated_at"}).
 				AddRow(1, "John Doe", "john@example.com", true, now, now))
 
-		// Execute raw query
 		query := repo.Query(context.Background())
 		users, err := query.ExecuteRaw("SELECT * FROM users WHERE created_at > $1", now.Add(-24*time.Hour))
 		require.NoError(t, err)
@@ -402,11 +381,10 @@ func TestQueryExecuteRaw(t *testing.T) {
 	})
 
 	t.Run("ExecuteRaw with error", func(t *testing.T) {
-		// Set up mock expectation
+
 		mock.ExpectQuery(`SELECT \* FROM invalid_table`).
 			WillReturnError(sql.ErrNoRows)
 
-		// Execute raw query
 		query := repo.Query(context.Background())
 		users, err := query.ExecuteRaw("SELECT * FROM invalid_table")
 		assert.Error(t, err)

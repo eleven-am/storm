@@ -60,7 +60,7 @@ func TestValidateModel(t *testing.T) {
 				Columns: []FieldMetadata{
 					{Name: "ID", DBName: "id", Type: "int", IsPrimaryKey: true},
 					{Name: "Email", DBName: "email", Type: "string"},
-					{Name: "Email2", DBName: "email", Type: "string"}, // Same DB name
+					{Name: "Email2", DBName: "email", Type: "string"},
 				},
 				PrimaryKeys: []string{"id"},
 			},
@@ -83,7 +83,7 @@ func TestValidateModel(t *testing.T) {
 }
 
 func TestValidateRelationship(t *testing.T) {
-	// Create test models
+
 	userModel := &ModelMetadata{
 		Name:      "User",
 		TableName: "users",
@@ -240,7 +240,7 @@ func TestValidateFieldMetadata(t *testing.T) {
 			name: "field with invalid db name",
 			field: FieldMetadata{
 				Name:   "Email",
-				DBName: "user-email", // Contains hyphen
+				DBName: "user-email",
 				Type:   "string",
 			},
 			wantErr: true,

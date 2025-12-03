@@ -191,7 +191,7 @@ func TestSortedTables(t *testing.T) {
 
 func TestExportSQL_WithViews(t *testing.T) {
 	schema := createTestSchema()
-	// Add a view to test views export
+
 	schema.Views["user_view"] = &ViewSchema{
 		Name:       "user_view",
 		Schema:     "public",
@@ -212,7 +212,7 @@ func TestExportSQL_WithViews(t *testing.T) {
 
 func TestExportSQL_WithSequences(t *testing.T) {
 	schema := createTestSchema()
-	// Add a sequence to test sequences export
+
 	schema.Sequences["users_id_seq"] = &SequenceSchema{
 		Name:        "users_id_seq",
 		Schema:      "public",
@@ -239,7 +239,7 @@ func TestExportSQL_WithSequences(t *testing.T) {
 
 func TestExportSQL_WithFunctions(t *testing.T) {
 	schema := createTestSchema()
-	// Add a function to test functions export
+
 	schema.Functions["test_func"] = &FunctionSchema{
 		Name:       "test_func",
 		Schema:     "public",

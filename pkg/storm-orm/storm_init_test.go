@@ -18,7 +18,7 @@ func TestStormInitializeRepositories(t *testing.T) {
 	storm := NewStorm(sqlxDB)
 
 	t.Run("initializeRepositories", func(t *testing.T) {
-		// Create some test repositories
+
 		userMeta := &ModelMetadata{
 			TableName:   "users",
 			StructName:  "TestUser",
@@ -55,14 +55,11 @@ func TestStormInitializeRepositories(t *testing.T) {
 		postRepo, err := NewRepository[TestPost](sqlxDB, postMeta)
 		require.NoError(t, err)
 
-		// Add repositories to storm
 		storm.repositories["users"] = userRepo
 		storm.repositories["posts"] = postRepo
 
-		// Call initializeRepositories
 		storm.initializeRepositories()
 
-		// Verify repositories still exist and are properly initialized
 		assert.Len(t, storm.repositories, 2)
 		assert.Contains(t, storm.repositories, "users")
 		assert.Contains(t, storm.repositories, "posts")

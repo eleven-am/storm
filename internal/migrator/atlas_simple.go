@@ -55,7 +55,6 @@ func (m *SimplifiedAtlasMigrator) GenerateMigrationSimple(ctx context.Context, s
 
 	var currentRealm *schema.Realm
 
-	// If CreateDBIfNotExists is true, assume empty database, skip inspection
 	if createDBIfNotExists {
 		currentRealm = &schema.Realm{
 			Schemas: []*schema.Schema{
@@ -84,7 +83,6 @@ func (m *SimplifiedAtlasMigrator) GenerateMigrationSimple(ctx context.Context, s
 	}
 	defer cleanup()
 
-	// Check if DDL uses CUID functions and create them in temp DB if needed
 	if strings.Contains(targetDDL, "gen_cuid()") {
 		logger.Atlas().Debug("DDL uses CUID functions, creating them in temp database")
 		cuidSQL := generateCUIDFunctions()
@@ -116,10 +114,9 @@ func (m *SimplifiedAtlasMigrator) GenerateMigrationSimple(ctx context.Context, s
 		return nil, nil, fmt.Errorf("failed to inspect target schema: %w", err)
 	}
 
-	// Use target driver for diff calculation when createDBIfNotExists is true
 	var diffDriver migrate.Driver = targetDriver
 	if !createDBIfNotExists {
-		// For normal cases, we need to create a source driver for diff calculation
+
 		sourceDriver, err := postgres.Open(sourceDB)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create source driver for diff: %w", err)

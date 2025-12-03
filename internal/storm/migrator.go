@@ -40,7 +40,6 @@ func (m *MigratorImpl) Generate(ctx context.Context, opts storm.MigrateOptions) 
 	var currentSchema *storm.Schema
 	var err error
 
-	// If CreateDBIfNotExists is true and database doesn't exist, use empty schema
 	if opts.CreateDBIfNotExists {
 		currentSchema, err = m.getCurrentSchemaOrEmpty(ctx)
 	} else {
@@ -60,8 +59,6 @@ func (m *MigratorImpl) Generate(ctx context.Context, opts storm.MigrateOptions) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate migration: %w", err)
 	}
-
-	// Migration files are already saved by AtlasMigrator, no need to save again
 
 	return migration, nil
 }
@@ -246,12 +243,11 @@ func (m *MigratorImpl) getAppliedMigrations(ctx context.Context) ([]string, erro
 }
 
 func (m *MigratorImpl) getPendingMigrations(ctx context.Context) ([]*storm.Migration, error) {
-	// Ensure migrations table exists
+
 	if err := m.createMigrationsTable(ctx); err != nil {
 		return nil, fmt.Errorf("failed to create migrations table: %w", err)
 	}
 
-	// Only look for .up.sql files for pending migrations
 	files, err := filepath.Glob(filepath.Join(m.config.MigrationsDir, "*.up.sql"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to glob migration files: %w", err)
@@ -285,17 +281,15 @@ func (m *MigratorImpl) getPendingMigrations(ctx context.Context) ([]*storm.Migra
 }
 
 func (m *MigratorImpl) loadMigration(upFile string) (*storm.Migration, error) {
-	// Read UP migration
+
 	upContent, err := os.ReadFile(upFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read up migration file: %w", err)
 	}
 
-	// Extract base name without .up.sql suffix
 	name := filepath.Base(upFile)
 	name = strings.TrimSuffix(name, ".up.sql")
 
-	// Try to read corresponding DOWN migration
 	downFile := strings.TrimSuffix(upFile, ".up.sql") + ".down.sql"
 	downContent := ""
 	if downBytes, err := os.ReadFile(downFile); err == nil {
@@ -323,8 +317,6 @@ func (m *MigratorImpl) executeMigration(ctx context.Context, tx *sqlx.Tx, migrat
 			continue
 		}
 
-		// Skip CREATE DATABASE statements when applying migrations
-		// These are only for push mode or manual execution
 		if strings.Contains(strings.ToUpper(stmt), "CREATE DATABASE") {
 			m.logger.Info("Skipping CREATE DATABASE statement in migration apply")
 			continue
@@ -350,17 +342,16 @@ func (m *MigratorImpl) splitSQLStatements(sql string) []string {
 	for i < len(runes) {
 		char := runes[i]
 
-		// Check for dollar quotes
 		if char == '$' && i+1 < len(runes) && runes[i+1] == '$' {
 			if !inDollarQuote {
-				// Starting dollar quote
+
 				inDollarQuote = true
 				current.WriteRune(char)
 				current.WriteRune(runes[i+1])
 				i += 2
 				continue
 			} else {
-				// Ending dollar quote
+
 				inDollarQuote = false
 				current.WriteRune(char)
 				current.WriteRune(runes[i+1])
@@ -369,11 +360,10 @@ func (m *MigratorImpl) splitSQLStatements(sql string) []string {
 			}
 		}
 
-		// Check for statement terminator
 		if !inDollarQuote && char == ';' {
 			current.WriteRune(char)
 			stmt := strings.TrimSpace(current.String())
-			// Only add non-empty statements that aren't just comments
+
 			if stmt != "" && !isOnlyComments(stmt) {
 				statements = append(statements, stmt)
 			}
@@ -386,7 +376,6 @@ func (m *MigratorImpl) splitSQLStatements(sql string) []string {
 		i++
 	}
 
-	// Add any remaining content
 	if current.Len() > 0 {
 		stmt := strings.TrimSpace(current.String())
 		if stmt != "" && !isOnlyComments(stmt) {
@@ -454,10 +443,10 @@ func (m *MigratorImpl) getCurrentSchema(ctx context.Context) (*storm.Schema, err
 }
 
 func (m *MigratorImpl) getCurrentSchemaOrEmpty(ctx context.Context) (*storm.Schema, error) {
-	// Try to get current schema, but if database doesn't exist, return empty schema
+
 	currentSchema, err := m.getCurrentSchema(ctx)
 	if err != nil {
-		// Check if the error is due to database not existing
+
 		if strings.Contains(err.Error(), "does not exist") {
 			m.logger.Info("Database does not exist, using empty schema for migration generation")
 			return &storm.Schema{

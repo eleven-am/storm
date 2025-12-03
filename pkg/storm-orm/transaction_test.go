@@ -67,10 +67,9 @@ func TestTransactionMethods(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectRollback()
 
-		// The panic will be re-thrown, so we need to recover it
 		defer func() {
 			if r := recover(); r != nil {
-				// Expected panic
+
 				assert.Equal(t, "test panic", r)
 			}
 		}()
@@ -79,7 +78,6 @@ func TestTransactionMethods(t *testing.T) {
 			panic("test panic")
 		})
 
-		// Should not reach here
 		t.Fatal("Expected panic but none occurred")
 	})
 }
@@ -102,11 +100,9 @@ func TestNewRepositoryWithTx(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, repo)
 
-		// Verify it's a transaction
 		isTransaction := repo.IsTransaction()
 		assert.True(t, isTransaction)
 
-		// Clean up
 		mock.ExpectRollback()
 		tx.Rollback()
 		require.NoError(t, mock.ExpectationsWereMet())

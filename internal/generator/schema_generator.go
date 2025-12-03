@@ -291,17 +291,17 @@ func (g *SchemaGenerator) processTableLevel(tableLevelDef map[string]string, tab
 			}
 			table.Indexes = append(table.Indexes, indexes...)
 		case "unique":
-			// Split multiple unique constraints that are separated by semicolons
+
 			uniqueDefs := strings.Split(value, ";")
-			
+
 			for _, uniqueDef := range uniqueDefs {
 				uniqueDef = strings.TrimSpace(uniqueDef)
 				if uniqueDef == "" {
 					continue
 				}
-				
+
 				logger.Schema().Debug("Processing unique constraint definition: %s", uniqueDef)
-				
+
 				if strings.Contains(uniqueDef, "where:") || strings.Contains(uniqueDef, "WHERE:") {
 					parts := strings.Split(uniqueDef, ",")
 					if len(parts) < 2 {
@@ -346,8 +346,7 @@ func (g *SchemaGenerator) processTableLevel(tableLevelDef map[string]string, tab
 						logger.Schema().Warn("Failed to parse unique constraint: %v", err)
 						continue
 					}
-					
-					// Skip table-level constraint if it's for a single column that already has unique
+
 					if len(constraint.Columns) == 1 {
 						columnName := constraint.Columns[0]
 						skipConstraint := false
@@ -362,7 +361,7 @@ func (g *SchemaGenerator) processTableLevel(tableLevelDef map[string]string, tab
 							continue
 						}
 					}
-					
+
 					logger.Schema().Debug("Parsed unique constraint: Name=%s, Columns=%v", constraint.Name, constraint.Columns)
 					table.Constraints = append(table.Constraints, constraint)
 				}
@@ -507,7 +506,7 @@ func (g *SchemaGenerator) addImplicitConstraints(table *SchemaTable) {
 		}
 
 		if column.IsUnique && !column.IsPrimaryKey {
-			// Check if a unique constraint already exists for this column
+
 			hasExistingConstraint := false
 			for _, existingConstraint := range table.Constraints {
 				if existingConstraint.Type == "UNIQUE" && len(existingConstraint.Columns) == 1 && existingConstraint.Columns[0] == column.Name {
@@ -515,7 +514,7 @@ func (g *SchemaGenerator) addImplicitConstraints(table *SchemaTable) {
 					break
 				}
 			}
-			
+
 			if !hasExistingConstraint {
 				constraintName := fmt.Sprintf("%s_%s_key", table.Name, column.Name)
 				constraint := SchemaConstraint{

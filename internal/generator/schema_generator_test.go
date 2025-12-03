@@ -288,7 +288,6 @@ func TestSchemaGenerator_generateTable(t *testing.T) {
 			t.Fatalf("generateTable failed: %v", err)
 		}
 
-		// Should have primary key constraint
 		foundPK := false
 		for _, constraint := range table.Constraints {
 			if constraint.Type == "PRIMARY KEY" {
@@ -725,7 +724,6 @@ func TestSchemaGenerator_processTableLevel(t *testing.T) {
 			t.Fatalf("processTableLevel failed: %v", err)
 		}
 
-		// Should not add any indexes or constraints for unknown attributes
 		if len(table.Indexes) != 0 {
 			t.Errorf("expected 0 indexes, got %d", len(table.Indexes))
 		}
@@ -1142,7 +1140,6 @@ func TestDatabaseSchema_sortTablesByDependencies(t *testing.T) {
 	tables := []string{"comments", "posts", "users"}
 	sorted := schema.sortTablesByDependencies(tables)
 
-	// Find positions
 	usersPos := -1
 	postsPos := -1
 	commentsPos := -1
@@ -1200,7 +1197,6 @@ func TestDatabaseSchema_GetTableNames(t *testing.T) {
 		t.Errorf("expected 2 table names, got %d", len(tableNames))
 	}
 
-	// Should be sorted by dependencies
 	usersPos := -1
 	postsPos := -1
 	for i, name := range tableNames {

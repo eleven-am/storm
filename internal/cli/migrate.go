@@ -91,7 +91,6 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	logger.CLI().Debug("Models package: %s", migratePackagePath)
 	logger.CLI().Debug("Output directory: %s", outputDir)
 
-	// Handle database creation if needed before initializing Storm
 	if createDBIfNotExists {
 		logger.CLI().Info("Checking if database exists...")
 		if err := ensureDatabaseExistsFromURL(ctx, dsn); err != nil {
@@ -113,7 +112,6 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	}
 	defer stormClient.Close()
 
-	// Don't ping if create-if-not-exists is set, as the database may not exist yet
 	if !createDBIfNotExists {
 		logger.CLI().Debug("Pinging database to verify connection...")
 		if err := stormClient.Ping(ctx); err != nil {
@@ -132,12 +130,11 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	}
 
 	if pushToDB {
-		// Direct push - generate and apply migration directly to database
+
 		logger.CLI().Info("Generating and applying migration directly to database...")
 		return executePushMigration(ctx, config, createDBIfNotExists, allowDestructive, migratePackagePath)
 	}
 
-	// Generate migration files only (no push)
 	if err := stormClient.Migrate(ctx, opts); err != nil {
 		return fmt.Errorf("failed to generate migration: %w", err)
 	}
@@ -159,10 +156,8 @@ func ensureDatabaseExistsFromURL(ctx context.Context, databaseURL string) error 
 		return fmt.Errorf("could not extract database name from URL")
 	}
 
-	// Build admin database URL (connect to 'postgres' database)
 	adminURL := buildAdminDatabaseURLFromURL(databaseURL)
 
-	// Connect to admin database
 	adminDB, err := sql.Open("postgres", adminURL)
 	if err != nil {
 		return fmt.Errorf("failed to open admin database connection: %w", err)
@@ -173,7 +168,6 @@ func ensureDatabaseExistsFromURL(ctx context.Context, databaseURL string) error 
 		return fmt.Errorf("failed to ping admin database: %w", err)
 	}
 
-	// Check if database exists
 	var exists bool
 	checkSQL := "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)"
 	err = adminDB.QueryRowContext(ctx, checkSQL, dbName).Scan(&exists)
@@ -182,7 +176,7 @@ func ensureDatabaseExistsFromURL(ctx context.Context, databaseURL string) error 
 	}
 
 	if !exists {
-		// Create the database
+
 		createSQL := fmt.Sprintf("CREATE DATABASE %s", quoteIdentifierCLI(dbName))
 		logger.DB().Info("Creating database: %s", dbName)
 
@@ -216,7 +210,7 @@ func buildAdminDatabaseURLFromURL(databaseURL string) string {
 	if strings.HasPrefix(databaseURL, "postgres://") || strings.HasPrefix(databaseURL, "postgresql://") {
 		parts := strings.Split(databaseURL, "/")
 		if len(parts) >= 4 {
-			// Replace the database name with 'postgres'
+
 			dbPart := parts[len(parts)-1]
 			if idx := strings.Index(dbPart, "?"); idx != -1 {
 				queryPart := dbPart[idx:]
@@ -239,7 +233,6 @@ func quoteIdentifierCLI(name string) string {
 func executePushMigration(ctx context.Context, config *storm.Config, createDBIfNotExists bool, allowDestructive bool, packagePath string) error {
 	logger.CLI().Info("Executing push migration...")
 
-	// Create database connection
 	db, err := sql.Open("postgres", config.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("failed to open database connection: %w", err)
@@ -250,21 +243,18 @@ func executePushMigration(ctx context.Context, config *storm.Config, createDBIfN
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Create Atlas migrator
 	dbConfig := migrator.NewDBConfig(config.DatabaseURL)
 	atlasMigrator := migrator.NewAtlasMigrator(dbConfig)
 
-	// Set up migration options
 	opts := migrator.MigrationOptions{
 		PackagePath:         packagePath,
-		OutputDir:           "", // No file output for push
+		OutputDir:           "",
 		DryRun:              false,
 		AllowDestructive:    allowDestructive,
-		PushToDB:            true, // This is the key difference
+		PushToDB:            true,
 		CreateDBIfNotExists: createDBIfNotExists,
 	}
 
-	// Execute migration
 	result, err := atlasMigrator.GenerateMigration(ctx, db, opts)
 	if err != nil {
 		return fmt.Errorf("failed to execute push migration: %w", err)
