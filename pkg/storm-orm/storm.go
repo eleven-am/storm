@@ -72,6 +72,7 @@ func newStormWithExecutor(db *sqlx.DB, executor DBExecutor, logger QueryLogger) 
 	return storm
 }
 
+
 // loggingExecutor wraps a DBExecutor to add query logging functionality
 type loggingExecutor struct {
 	executor DBExecutor

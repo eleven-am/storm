@@ -644,7 +644,7 @@ import (
 )
 
 // Storm provides a centralized access point for all repositories
-// 
+//
 // Basic usage:
 //   storm := NewStorm(db)
 //   user, err := storm.Users.FindByID(ctx, "123")
@@ -670,9 +670,15 @@ import (
 //       // All operations here run in a transaction
 //       return txStorm.Users.Create(ctx, newUser)
 //   })
+//
+// Auto-migration:
+//   config := storm.Config{DatabaseURL: "...", ModelsPackage: "..."}
+//   result, err := storm.AutoMigrate(ctx, config)           // Safe migration
+//   result, err := storm.AutoMigrateDryRun(ctx, config)     // Preview changes
+//   result, err := storm.AutoMigrateDestructive(ctx, config) // Allow destructive changes
 type Storm struct {
 	*storm.Storm
-	
+
 	// All repositories
 	{{range $modelName, $model := .Models}}
 	{{ plural $model.Name }} *{{ $model.Name }}Repository
@@ -681,13 +687,13 @@ type Storm struct {
 
 func NewStorm(db *sqlx.DB, logger ...storm.QueryLogger) *Storm {
 	baseStorm := storm.NewStorm(db, logger...)
-	
+
 	storm := &Storm{
 		Storm: baseStorm,
 	}
-	
+
 	storm.initializeRepositories()
-	
+
 	return storm
 }
 
