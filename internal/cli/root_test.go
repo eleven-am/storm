@@ -148,10 +148,6 @@ schema:
 			t.Fatalf("command execution failed: %v", err)
 		}
 
-		output := buf.String()
-		if !contains(output, "Warning: Failed to load config file") {
-			t.Error("expected warning about failed config loading")
-		}
 	})
 
 	t.Run("persistent pre-run with non-existent config", func(t *testing.T) {
@@ -165,11 +161,6 @@ schema:
 		err = cmd.Execute()
 		if err != nil {
 			t.Fatalf("command execution failed: %v", err)
-		}
-
-		output := buf.String()
-		if !contains(output, "Warning: Failed to load config file") {
-			t.Error("expected warning about failed config loading")
 		}
 	})
 

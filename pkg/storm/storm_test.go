@@ -319,6 +319,60 @@ func TestStormCreation(t *testing.T) {
 	}
 }
 
+func TestWithAutoMigrateOptions(t *testing.T) {
+	config := NewConfig()
+
+	opts := AutoMigrateOptions{
+		AllowDestructive:    true,
+		DryRun:              true,
+		CreateDBIfNotExists: true,
+		LockTimeout:         30 * time.Second,
+	}
+
+	err := WithAutoMigrateOptions(opts)(config)
+	if err != nil {
+		t.Errorf("WithAutoMigrateOptions failed: %v", err)
+	}
+
+	if config.AutoMigrateOpts.AllowDestructive != true {
+		t.Errorf("Expected AllowDestructive to be true, got %v", config.AutoMigrateOpts.AllowDestructive)
+	}
+	if config.AutoMigrateOpts.DryRun != true {
+		t.Errorf("Expected DryRun to be true, got %v", config.AutoMigrateOpts.DryRun)
+	}
+	if config.AutoMigrateOpts.CreateDBIfNotExists != true {
+		t.Errorf("Expected CreateDBIfNotExists to be true, got %v", config.AutoMigrateOpts.CreateDBIfNotExists)
+	}
+	if config.AutoMigrateOpts.LockTimeout != 30*time.Second {
+		t.Errorf("Expected LockTimeout to be 30s, got %v", config.AutoMigrateOpts.LockTimeout)
+	}
+}
+
+func TestAutoMigrateOptionsDefaults(t *testing.T) {
+	opts := AutoMigrateOptions{}
+
+	if opts.AllowDestructive != false {
+		t.Error("Expected AllowDestructive default to be false")
+	}
+	if opts.DryRun != false {
+		t.Error("Expected DryRun default to be false")
+	}
+	if opts.CreateDBIfNotExists != false {
+		t.Error("Expected CreateDBIfNotExists default to be false")
+	}
+	if opts.LockTimeout != 0 {
+		t.Error("Expected LockTimeout default to be 0")
+	}
+}
+
+func TestStubMigratorAutoMigrate(t *testing.T) {
+	m := &migrator{}
+	err := m.AutoMigrate(nil, AutoMigrateOptions{})
+	if err != ErrNotImplemented {
+		t.Errorf("Expected ErrNotImplemented, got %v", err)
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && s[len(s)-len(substr):] == substr ||

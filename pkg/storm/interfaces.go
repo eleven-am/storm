@@ -24,6 +24,9 @@ type Migrator interface {
 
 	// Pending returns all pending migrations
 	Pending(ctx context.Context) ([]*Migration, error)
+
+	// AutoMigrate reads Go structs and applies schema changes directly to the database
+	AutoMigrate(ctx context.Context, opts AutoMigrateOptions) error
 }
 
 // SchemaInspector analyzes database schema
@@ -210,6 +213,14 @@ type MigrateOptions struct {
 	AllowDestructive    bool
 	SkipPrompt          bool
 	CreateDBIfNotExists bool
+}
+
+// AutoMigrateOptions configures automatic schema migration
+type AutoMigrateOptions struct {
+	AllowDestructive    bool
+	DryRun              bool
+	CreateDBIfNotExists bool
+	LockTimeout         time.Duration
 }
 
 // GenerateOptions configures ORM code generation

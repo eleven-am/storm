@@ -209,6 +209,59 @@ func (m *MigratorImpl) Pending(ctx context.Context) ([]*storm.Migration, error) 
 	return m.getPendingMigrations(ctx)
 }
 
+func (m *MigratorImpl) AutoMigrate(ctx context.Context, opts storm.AutoMigrateOptions) error {
+	m.logger.Info("Starting auto-migration...", "package", m.config.ModelsPackage)
+
+	lockTimeout := opts.LockTimeout
+	if lockTimeout == 0 {
+		lockTimeout = 30 * time.Second
+	}
+
+	lockCtx, cancel := context.WithTimeout(ctx, lockTimeout)
+	defer cancel()
+
+	const lockID = 8675309
+	if err := m.acquireAdvisoryLock(lockCtx, lockID); err != nil {
+		return fmt.Errorf("failed to acquire migration lock: %w", err)
+	}
+	defer m.releaseAdvisoryLock(ctx, lockID)
+
+	m.logger.Info("Acquired migration lock, proceeding with auto-migration")
+
+	atlasMigrator := NewAtlasMigrator(m.config.DatabaseURL)
+
+	migrationOpts := MigrationOptions{
+		PackagePath:         m.config.ModelsPackage,
+		OutputDir:           "",
+		DryRun:              opts.DryRun,
+		AllowDestructive:    opts.AllowDestructive,
+		PushToDB:            true,
+		CreateDBIfNotExists: opts.CreateDBIfNotExists,
+	}
+
+	result, err := atlasMigrator.GenerateMigration(ctx, m.db.DB, migrationOpts)
+	if err != nil {
+		return fmt.Errorf("auto-migration failed: %w", err)
+	}
+
+	if len(result.Changes) == 0 {
+		m.logger.Info("No schema changes detected, database is up to date")
+	} else {
+		m.logger.Info("Auto-migration completed successfully", "changes", len(result.Changes))
+	}
+
+	return nil
+}
+
+func (m *MigratorImpl) acquireAdvisoryLock(ctx context.Context, lockID int64) error {
+	_, err := m.db.ExecContext(ctx, "SELECT pg_advisory_lock($1)", lockID)
+	return err
+}
+
+func (m *MigratorImpl) releaseAdvisoryLock(ctx context.Context, lockID int64) {
+	_, _ = m.db.ExecContext(ctx, "SELECT pg_advisory_unlock($1)", lockID)
+}
+
 func (m *MigratorImpl) createMigrationsTable(ctx context.Context) error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (

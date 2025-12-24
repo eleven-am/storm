@@ -94,6 +94,14 @@ func WithAutoMigrate(enabled bool) Option {
 	}
 }
 
+// WithAutoMigrateOptions configures automatic migration behavior
+func WithAutoMigrateOptions(opts AutoMigrateOptions) Option {
+	return func(c *Config) error {
+		c.AutoMigrateOpts = opts
+		return nil
+	}
+}
+
 // WithGenerateHooks enables hook generation
 func WithGenerateHooks(enabled bool) Option {
 	return func(c *Config) error {

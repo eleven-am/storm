@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
@@ -91,6 +92,15 @@ func (s *Storm) initialize() error {
 		return NewSchemaError("initialize_schema", err)
 	} else {
 		s.schema = schema
+	}
+
+	if s.config.AutoMigrate {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		if err := s.AutoMigrate(ctx); err != nil {
+			return NewMigrationError("auto_migrate", err)
+		}
 	}
 
 	return nil
@@ -231,6 +241,18 @@ func (s *Storm) Introspect(ctx context.Context) (*Schema, error) {
 	return s.schema.Inspect(ctx)
 }
 
+// AutoMigrate reads Go structs and applies schema changes directly to the database
+func (s *Storm) AutoMigrate(ctx context.Context, opts ...AutoMigrateOptions) error {
+	var options AutoMigrateOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	} else {
+		options = s.config.AutoMigrateOpts
+	}
+
+	return s.migrator.AutoMigrate(ctx, options)
+}
+
 type migrator struct {
 	storm *Storm
 }
@@ -257,6 +279,10 @@ func (m *migrator) History(ctx context.Context) ([]*MigrationRecord, error) {
 
 func (m *migrator) Pending(ctx context.Context) ([]*Migration, error) {
 	return nil, ErrNotImplemented
+}
+
+func (m *migrator) AutoMigrate(ctx context.Context, opts AutoMigrateOptions) error {
+	return ErrNotImplemented
 }
 
 type ORM struct {

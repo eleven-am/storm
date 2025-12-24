@@ -26,6 +26,7 @@ type Config struct {
 	MigrationsDir   string `yaml:"migrations_dir" env:"STORM_MIGRATIONS_DIR"`
 	MigrationsTable string `yaml:"migrations_table" env:"STORM_MIGRATIONS_TABLE"`
 	AutoMigrate     bool   `yaml:"auto_migrate" env:"STORM_AUTO_MIGRATE"`
+	AutoMigrateOpts AutoMigrateOptions `yaml:"-"`
 
 	// ORM settings
 	GenerateHooks bool `yaml:"generate_hooks" env:"STORM_GENERATE_HOOKS"`

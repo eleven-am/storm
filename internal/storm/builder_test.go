@@ -97,6 +97,20 @@ func TestBuilderIntegration(t *testing.T) {
 	}
 }
 
+func TestMigratorImplImplementsInterface(t *testing.T) {
+	config := &storm.Config{
+		ModelsPackage:   "./models",
+		MigrationsDir:   "./migrations",
+		MigrationsTable: "schema_migrations",
+	}
+	logger := &TestLogger{}
+	mockDB := &sqlx.DB{}
+
+	migrator := BuildMigrator(mockDB, config, logger)
+
+	var _ storm.Migrator = migrator
+}
+
 type TestLogger struct{}
 
 func (l *TestLogger) Debug(msg string, fields ...interface{}) {}

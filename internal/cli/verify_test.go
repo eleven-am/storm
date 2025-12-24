@@ -14,7 +14,7 @@ func TestRunVerify(t *testing.T) {
 	origDbHost := dbHost
 	origDbPort := dbPort
 	origDbSSLMode := dbSSLMode
-	origPackagePath := packagePath
+	origPackagePath := verifyPackagePath
 	origDebug := debug
 	defer func() {
 		dbURL = origDbURL
@@ -24,7 +24,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = origDbHost
 		dbPort = origDbPort
 		dbSSLMode = origDbSSLMode
-		packagePath = origPackagePath
+		verifyPackagePath = origPackagePath
 		debug = origDebug
 	}()
 
@@ -37,7 +37,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
@@ -58,7 +58,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
@@ -79,7 +79,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
@@ -100,7 +100,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
@@ -122,7 +122,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
@@ -144,7 +144,7 @@ func TestRunVerify(t *testing.T) {
 		dbHost = "localhost"
 		dbPort = "5432"
 		dbSSLMode = "disable"
-		packagePath = "./models"
+		verifyPackagePath = "./models"
 		debug = false
 
 		err := runVerify(verifyCmd, []string{})
