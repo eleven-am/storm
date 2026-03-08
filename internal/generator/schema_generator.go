@@ -111,6 +111,9 @@ func (g *SchemaGenerator) generateTable(tableDef parser2.TableDefinition) (Schem
 	}
 
 	for _, field := range tableDef.Fields {
+		if field.IsRelationship {
+			continue
+		}
 		column, err := g.generateColumn(field, tableDef.TableName)
 		if err != nil {
 			return table, fmt.Errorf("failed to generate column %s: %w", field.Name, err)

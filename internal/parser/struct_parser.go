@@ -12,17 +12,18 @@ import (
 
 // FieldDefinition represents a struct field with database metadata
 type FieldDefinition struct {
-	Name      string
-	DBName    string
-	Type      string
-	IsPointer bool
-	IsArray   bool
-	DBDef     map[string]string
-	DBTag     string
-	DBDefTag  string // Deprecated: use StormTag instead
-	JSONTag   string
-	ORMTag    string // Deprecated: use StormTag instead
-	StormTag  string // New unified tag
+	Name           string
+	DBName         string
+	Type           string
+	IsPointer      bool
+	IsArray        bool
+	IsRelationship bool
+	DBDef          map[string]string
+	DBTag          string
+	DBDefTag       string // Deprecated: use StormTag instead
+	JSONTag        string
+	ORMTag         string // Deprecated: use StormTag instead
+	StormTag       string // New unified tag
 }
 
 // TableDefinition represents a complete table structure
@@ -222,8 +223,13 @@ func (p *StructParser) parseField(field *ast.Field) ([]FieldDefinition, map[stri
 			if fieldDef.StormTag != "" {
 				isRelationshipField := fieldDef.IsArray || fieldDef.IsPointer
 				parsed, err := p.stormTagParser.ParseStormTag(fieldDef.StormTag, isRelationshipField)
-				if err == nil && !parsed.IsRelationship {
-					fieldDef.DBDef = parsed.ToDBDefAttributes()
+				if err == nil {
+					fieldDef.IsRelationship = parsed.IsRelationship
+					if !parsed.IsRelationship {
+						fieldDef.DBDef = parsed.ToDBDefAttributes()
+					} else {
+						fieldDef.DBDef = make(map[string]string)
+					}
 				} else {
 					fieldDef.DBDef = make(map[string]string)
 				}

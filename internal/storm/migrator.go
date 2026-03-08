@@ -55,7 +55,7 @@ func (m *MigratorImpl) Generate(ctx context.Context, opts storm.MigrateOptions) 
 		return nil, fmt.Errorf("failed to get desired schema: %w", err)
 	}
 
-	migration, err := m.generateMigration(currentSchema, desiredSchema, opts.CreateDBIfNotExists)
+	migration, err := m.generateMigration(currentSchema, desiredSchema, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate migration: %w", err)
 	}
@@ -527,16 +527,16 @@ func (m *MigratorImpl) getDesiredSchema(packagePath string) (*storm.Schema, erro
 	return m.convertGeneratorSchemaToStorm(schema), nil
 }
 
-func (m *MigratorImpl) generateMigration(current, desired *storm.Schema, createDBIfNotExists bool) (*storm.Migration, error) {
+func (m *MigratorImpl) generateMigration(current, desired *storm.Schema, migrateOpts storm.MigrateOptions) (*storm.Migration, error) {
 	atlasMigrator := NewAtlasMigrator(m.config.DatabaseURL)
 
 	opts := MigrationOptions{
 		PackagePath:         m.config.ModelsPackage,
 		OutputDir:           m.config.MigrationsDir,
-		DryRun:              false,
-		AllowDestructive:    false,
+		DryRun:              migrateOpts.DryRun,
+		AllowDestructive:    migrateOpts.AllowDestructive,
 		PushToDB:            false,
-		CreateDBIfNotExists: createDBIfNotExists,
+		CreateDBIfNotExists: migrateOpts.CreateDBIfNotExists,
 	}
 
 	ctx := context.Background()

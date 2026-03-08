@@ -127,6 +127,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 		OutputDir:           outputDir,
 		DryRun:              dryRun,
 		CreateDBIfNotExists: createDBIfNotExists,
+		AllowDestructive:    allowDestructive,
 	}
 
 	if pushToDB {
